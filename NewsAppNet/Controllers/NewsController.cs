@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewsAppNet.Data.Repositories.Interfaces;
 using NewsAppNet.Models.DataModels;
+using NewsAppNet.Services.Interfaces;
 
 namespace NewsAppNet.Controllers
 {
@@ -8,13 +9,13 @@ namespace NewsAppNet.Controllers
     [Route("[controller]")]
     public class NewsController : ControllerBase
     {
-        INewsItemRepository newsItemRepository;
+        INewsService newsService;
 
         public NewsController(
-            INewsItemRepository newsItemRepository
+            INewsService newsService
             ) 
         { 
-            this.newsItemRepository = newsItemRepository;
+            this.newsService = newsService;
         }
 
         [HttpGet]
@@ -25,10 +26,9 @@ namespace NewsAppNet.Controllers
             item.Title = "title";
             item.Summary = "summary";
 
-            newsItemRepository.Add(item);
-            newsItemRepository.Commit();
+            newsService.AddNews(item);
 
-            return new JsonResult(newsItemRepository.GetAll());
+            return new JsonResult(newsService.GetNews());
         }
     }
 }
