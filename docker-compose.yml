@@ -1,5 +1,8 @@
 version: '3.4'
 
+volumes:
+    news2:    
+
 services:
     newsappdb:
         image: "mcr.microsoft.com/mssql/server:2019-latest"
@@ -7,7 +10,9 @@ services:
             ACCEPT_EULA: Y
             SA_PASSWORD: Password123
         ports:
-          - 1433:1433
+            - 1436:1436
+        volumes:
+            - news2:/var/opt/mssql
 
     newsappnet:
         image: ${DOCKER_REGISTRY-}newsappnet
@@ -17,4 +22,5 @@ services:
         depends_on:
             - newsappdb
         ports:
-            - 5000:80  
+            - 5000:80
+
