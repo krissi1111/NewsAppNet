@@ -6,10 +6,12 @@ namespace NewsAppNet.Data.NewsFeeds
     public class NewsItemBuilder : INewsItemBuilder
     {
         public SyndicationItem Item;
+        public string NoImage;
 
         public NewsItemBuilder(SyndicationItem item)
         {
             Item = item;
+            NoImage = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/480px-No_image_available.svg.png";
         }
 
         public virtual string GetTitle()
@@ -29,7 +31,7 @@ namespace NewsAppNet.Data.NewsFeeds
 
         public virtual string GetImage()
         {
-            return "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/480px-No_image_available.svg.png";
+            return NoImage;
         }
 
         public virtual DateTime GetDate()

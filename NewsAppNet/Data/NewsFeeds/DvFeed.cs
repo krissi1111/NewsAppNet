@@ -3,17 +3,17 @@ using System.ServiceModel.Syndication;
 
 namespace NewsAppNet.Data.NewsFeeds
 {
-    public class VisirFeed : NewsFeedBase
+    public class DvFeed : NewsFeedBase
     {
-        public VisirFeed()
+        public DvFeed()
         {
-            Url = "https://www.visir.is/rss/allt";
-            FeedName = "Visir";
+            Url = "https://www.dv.is/feed/";
+            FeedName = "Dv";
         }
 
         public override NewsItemBuilder BuildItem(SyndicationItem item)
         {
-            return new VisirItemBuilder(item);
+            return new DvItemBuilder(item);
         }
     }
 }

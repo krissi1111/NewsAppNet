@@ -6,8 +6,8 @@ namespace NewsAppNet.Data.NewsFeeds
 {
     public class NewsFeedBase : INewsFeedBase
     {
-        public string Url { get; set; }
-        public string FeedName { get; set; }
+        public string Url { get; set; } = string.Empty;
+        public string FeedName { get; set; } = string.Empty;
 
         public SyndicationFeed ReadFeed()
         {
@@ -30,9 +30,14 @@ namespace NewsAppNet.Data.NewsFeeds
             return feedItemList;
         }
 
-        public virtual NewsItem GetItem(SyndicationItem item)
+        public virtual NewsItemBuilder BuildItem(SyndicationItem item)
         {
-            NewsItemBuilder itemBuilder = new(item);
+            return new NewsItemBuilder(item);
+        }
+
+        public NewsItem GetItem(SyndicationItem item)
+        {
+            NewsItemBuilder itemBuilder = BuildItem(item);
 
             NewsItem news = new()
             {
