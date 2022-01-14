@@ -22,6 +22,36 @@ namespace NewsAppNet.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
+            modelBuilder.Entity("NewsAppNet.Models.DataModels.Comment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("NewsItemId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NewsItemId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Comments", (string)null);
+                });
+
             modelBuilder.Entity("NewsAppNet.Models.DataModels.NewsItem", b =>
                 {
                     b.Property<int>("Id")
@@ -55,7 +85,165 @@ namespace NewsAppNet.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("NewsItems");
+                    b.ToTable("NewsItems", (string)null);
+                });
+
+            modelBuilder.Entity("NewsAppNet.Models.DataModels.Reply", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int>("CommentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("NewsItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ReplyId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CommentId");
+
+                    b.HasIndex("NewsItemId");
+
+                    b.HasIndex("ReplyId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Replies", (string)null);
+                });
+
+            modelBuilder.Entity("NewsAppNet.Models.DataModels.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            FirstName = "Admin",
+                            LastName = "Admin",
+                            Password = "AQAAAAEAACcQAAAAEF+SnCEkIUz3x7MnBFGtsOXFZhPC+s7yM8IfwesoTI3vN6yyefqCvRoYK2L7vaMkdQ==",
+                            UserType = "Admin",
+                            Username = "Admin"
+                        });
+                });
+
+            modelBuilder.Entity("NewsAppNet.Models.DataModels.Comment", b =>
+                {
+                    b.HasOne("NewsAppNet.Models.DataModels.NewsItem", "NewsItem")
+                        .WithMany("Comments")
+                        .HasForeignKey("NewsItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NewsAppNet.Models.DataModels.User", "User")
+                        .WithMany("Comments")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("NewsItem");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("NewsAppNet.Models.DataModels.Reply", b =>
+                {
+                    b.HasOne("NewsAppNet.Models.DataModels.Comment", "Comment")
+                        .WithMany("Replies")
+                        .HasForeignKey("CommentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NewsAppNet.Models.DataModels.NewsItem", "NewsItem")
+                        .WithMany("Replies")
+                        .HasForeignKey("NewsItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NewsAppNet.Models.DataModels.Reply", null)
+                        .WithMany("Replies")
+                        .HasForeignKey("ReplyId");
+
+                    b.HasOne("NewsAppNet.Models.DataModels.User", "User")
+                        .WithMany("Replies")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Comment");
+
+                    b.Navigation("NewsItem");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("NewsAppNet.Models.DataModels.Comment", b =>
+                {
+                    b.Navigation("Replies");
+                });
+
+            modelBuilder.Entity("NewsAppNet.Models.DataModels.NewsItem", b =>
+                {
+                    b.Navigation("Comments");
+
+                    b.Navigation("Replies");
+                });
+
+            modelBuilder.Entity("NewsAppNet.Models.DataModels.Reply", b =>
+                {
+                    b.Navigation("Replies");
+                });
+
+            modelBuilder.Entity("NewsAppNet.Models.DataModels.User", b =>
+                {
+                    b.Navigation("Comments");
+
+                    b.Navigation("Replies");
                 });
 #pragma warning restore 612, 618
         }
