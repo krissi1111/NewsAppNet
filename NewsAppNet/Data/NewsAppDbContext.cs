@@ -10,7 +10,7 @@ namespace NewsAppNet.Data
         public DbSet<NewsItem> NewsItems { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Comment> Comments { get; set; }
-        public DbSet<Reply> Replys { get; set; }
+        public DbSet<Reply> Replies { get; set; }
 
         public NewsAppDbContext(DbContextOptions<NewsAppDbContext> options) : base(options) { }
 
