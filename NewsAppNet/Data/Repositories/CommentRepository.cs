@@ -1,4 +1,5 @@
-﻿using NewsAppNet.Data.Repositories.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using NewsAppNet.Data.Repositories.Interfaces;
 using NewsAppNet.Models.DataModels;
 
 namespace NewsAppNet.Data.Repositories

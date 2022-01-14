@@ -9,14 +9,17 @@ namespace NewsAppNet.Services
     {
         ICommentRepository commentRepository;
         IReplyRepository replyRepository;
+        IUserService userService;
 
         public CommentReplyService(
             ICommentRepository commentRepository, 
-            IReplyRepository replyRepository
+            IReplyRepository replyRepository,
+            IUserService userService
             )
         {
             this.commentRepository = commentRepository;
             this.replyRepository = replyRepository;
+            this.userService = userService;
         }
 
         public IEnumerable<Comment> GetComments(int newsId)
@@ -32,9 +35,27 @@ namespace NewsAppNet.Services
         public List<CommentView> GetCommentList(int newsId, int userId)
         {
             var comments = GetComments(newsId).ToList();
+            var replies = GetReplies(newsId).ToList();
 
             var commentViews = new List<CommentView>();
-            foreach (var comment in comments) commentViews.Add(new CommentView(comment));
+            foreach (var comment in comments)
+            {
+                var replyViews = new List<CommentView>();
+                foreach(var reply in replies)
+                {
+                    if (reply.CommentId != comment.Id) continue;
+                    var replyView = new CommentView(reply);
+                    User userR = userService.GetUser(reply.UserId);
+                    replyView.UserFullName = string.Format("{0} {1}", userR.FirstName, userR.LastName);
+                    replyViews.Add(replyView);
+                }
+                
+                var commentView = new CommentView(comment);
+                User user = userService.GetUser(comment.UserId);
+                commentView.UserFullName = string.Format("{0} {1}", user.FirstName, user.LastName);
+                commentView.Replies = replyViews;
+                commentViews.Add(commentView);
+            }
 
             return commentViews;
         }
