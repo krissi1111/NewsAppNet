@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using NewsAppNet.Data.NewsFeeds;
 using NewsAppNet.Data.Repositories.Interfaces;
 using NewsAppNet.Models.DataModels;
+using NewsAppNet.Models.ViewModels;
 using NewsAppNet.Services.Interfaces;
 
 namespace NewsAppNet.Controllers
@@ -21,14 +23,41 @@ namespace NewsAppNet.Controllers
         [HttpGet]
         public ActionResult Get()
         {
-            var item = new NewsItem();
-            item.Date = DateTime.Now;
-            item.Title = "title";
-            item.Summary = "summary";
-
-            newsService.AddNews(item);
-
             return new JsonResult(newsService.GetNews());
+        }
+
+        [HttpPost("search")]
+        public ActionResult GetNewsSearch([FromForm] Search search)
+        {
+            var viewList = newsService.GetNewsSearch(search);
+            return new JsonResult(viewList);
+        }
+
+        [HttpGet("Add")]
+        public ActionResult AddNews()
+        {
+            RuvFeed visirFeed = new();
+
+            List<NewsItemView> items = new List<NewsItemView>();
+            List<NewsItem> newsFeedItems = visirFeed.GetNewsItems();
+
+            foreach(NewsItem item in newsFeedItems)
+            {
+                newsService.AddNews(item);
+                items.Add(new NewsItemView(item));
+            }
+
+            return new JsonResult(items);
+        }
+
+        [HttpGet("delete")]
+        public void Delete()
+        {
+            var news = newsService.GetNews();
+            foreach(var item in news)
+            {
+                newsService.RemoveNews(item.Id);
+            }
         }
     }
 }

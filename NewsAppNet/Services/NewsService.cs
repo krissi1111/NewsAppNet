@@ -23,16 +23,7 @@ namespace NewsAppNet.Services
             List<NewsItemView> viewList = new List<NewsItemView>();
             foreach (NewsItem item in news)
             {
-                viewList.Add(new NewsItemView
-                {
-                    Title = item.Title,
-                    Summary = item.Summary,
-                    Link = item.Link,
-                    Image = item.Image,
-                    Id = item.Id,
-                    Date = item.Date,
-                    Origin = item.Origin,
-                });
+                viewList.Add(new NewsItemView(item));
             }
 
             return viewList;
@@ -42,24 +33,70 @@ namespace NewsAppNet.Services
         {
             NewsItem newsItem = newsItemRepository.GetSingle(Id);
 
-            NewsItemView view = new NewsItemView
-            {
-                Id = newsItem.Id,
-                Title = newsItem.Title,
-                Summary = newsItem.Summary,
-                Origin = newsItem.Origin,
-                Link = newsItem.Link,
-                Image = newsItem.Image,
-                Date = newsItem.Date,
-            };
+            NewsItemView view = new NewsItemView(newsItem);
 
             return view;
         }
 
+        public List<NewsItemView> GetNewsSearch(Search search)
+        {
+            var title = search.Title;
+            var summary = search.Summary;
+            var dateStart = search.DateStart;
+            var dateEnd = search.DateEnd;
+            var origin = search.Origin;
+
+            IEnumerable<NewsItem> news = newsItemRepository.GetAll();
+
+            if (!string.IsNullOrEmpty(title))
+            {
+                var newsT = news.Where(s => s.Title.Contains(title));
+                if (!string.IsNullOrEmpty(summary))
+                {
+                    var newsS = news.Where(s => s.Summary.Contains(summary));
+                    news = newsT.Union(newsS);
+                }
+                else news = newsT;
+            }
+
+            if (!string.IsNullOrEmpty(summary) && string.IsNullOrEmpty(title))
+            {
+                news = news.Where(s => s.Summary.Contains(summary));
+            }
+
+            if (!string.IsNullOrEmpty(origin))
+            {
+                news = news.Where(s => s.Origin.Contains(origin));
+            };
+
+            if (!string.IsNullOrEmpty(dateStart))
+            {
+                news = news.Where(s => s.Date >= DateTime.Parse(dateStart));
+            }
+
+            if (!string.IsNullOrEmpty(dateEnd))
+            {
+                news = news.Where(s => s.Date <= DateTime.Parse(dateEnd));
+            }
+
+            news = news.OrderByDescending(s => s.Date);
+
+            List<NewsItemView> viewList = new List<NewsItemView>();
+            foreach (NewsItem item in news)
+            {
+                Console.WriteLine(dateEnd);
+                viewList.Add(new NewsItemView(item));
+            }
+
+            return viewList;
+        }
+
         public void AddNews(NewsItem newsItem)
         {
-            newsItemRepository.Add(newsItem);
-            newsItemRepository.Commit();
+            if (!newsItemRepository.NewsItemExists(newsItem.Link)) { 
+                newsItemRepository.Add(newsItem);
+                newsItemRepository.Commit();
+            }
         }
 
         public void RemoveNews(int Id)
