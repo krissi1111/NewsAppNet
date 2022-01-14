@@ -18,13 +18,8 @@ namespace NewsAppNet.Models.ViewModels
             UserId = comment.UserId;
             Text = comment.Text;
             Date = comment.Date;
-            if (comment.User != null)
-            {
-                User user = comment.User;
-                UserFullName = string.Format("{0} {1}", user.FirstName, user.LastName);
-            }
             var replies = new List<CommentView>();
-            if (comment.Replies != null) { 
+            if (comment.Replies != null) {
                 foreach (var item in comment.Replies)
                 {
                     replies.Add(new CommentView(item));
