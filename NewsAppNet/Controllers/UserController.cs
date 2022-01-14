@@ -10,11 +10,15 @@ namespace NewsAppNet.Controllers
     public class UserController : ControllerBase
     {
         IUserService userService;
+        IAuthService authService;
+
         public UserController(
-            IUserService userService
+            IUserService userService,
+            IAuthService authService
             )
         {
             this.userService = userService;
+            this.authService = authService;
         }
 
         [HttpPost("login")]
@@ -35,8 +39,9 @@ namespace NewsAppNet.Controllers
         {
             var id = HttpContext.User.Identity.Name;
             var user = userService.GetUser(Int32.Parse(id));
+            var userAuth = authService.GetUserAuthData(user);
 
-            return user;
+            return userAuth;
             //return new JsonResult("User is logged in");
         }
     }

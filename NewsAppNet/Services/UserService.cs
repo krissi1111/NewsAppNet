@@ -74,11 +74,17 @@ namespace NewsAppNet.Services
             return authService.GetUserAuthData(userRepository.GetSingle(u => u.Username == user.Username));
         }
 
-        public UserAuthData GetUser(int id)
+        public User GetUser(int id)
+        {
+            var user = userRepository.GetSingle(id);
+            return user;
+        }
+
+        /*public UserAuthData GetUserAuth(int id)
         {
             var user = userRepository.GetSingle(id);
 
             return authService.GetUserAuthData(user);
-        }
+        }*/
     }
 }

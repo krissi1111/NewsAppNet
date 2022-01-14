@@ -10,6 +10,6 @@ namespace NewsAppNet.Services.Interfaces
         bool VerifyPassword(string actualPassword, string hashedPassword);
         ActionResult<UserAuthData> Login(User user);
         ActionResult<UserAuthData> Register(User user);
-        UserAuthData GetUser(int id);
+        User GetUser(int id);
     }
 }
