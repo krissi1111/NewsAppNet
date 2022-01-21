@@ -1,4 +1,6 @@
-﻿using NewsAppNet.Data.Repositories.Interfaces;
+﻿using Microsoft.AspNetCore.Mvc;
+using NewsAppNet.Data.NewsFeeds.Feeds;
+using NewsAppNet.Data.Repositories.Interfaces;
 using NewsAppNet.Models.DataModels;
 using NewsAppNet.Models.ViewModels;
 using NewsAppNet.Services.Interfaces;
@@ -8,17 +10,24 @@ namespace NewsAppNet.Services
     public class NewsService : INewsService
     {
         INewsItemRepository newsItemRepository;
+        ICommentReplyService commentReplyService;
+        IFavoriteService favoriteService;
 
         public NewsService(
-            INewsItemRepository newsItemRepository
+            INewsItemRepository newsItemRepository,
+            ICommentReplyService commentReplyService, 
+            IFavoriteService favoriteService
             )
         {
             this.newsItemRepository = newsItemRepository;
+            this.commentReplyService = commentReplyService;
+            this.favoriteService = favoriteService;
         }
 
         public List<NewsItemView> GetNews()
         {
             IEnumerable<NewsItem> news = newsItemRepository.GetAll();
+            news = news.OrderByDescending(s => s.Date);
 
             List<NewsItemView> viewList = new List<NewsItemView>();
             foreach (NewsItem item in news)
@@ -84,19 +93,31 @@ namespace NewsAppNet.Services
             List<NewsItemView> viewList = new List<NewsItemView>();
             foreach (NewsItem item in news)
             {
-                Console.WriteLine(dateEnd);
                 viewList.Add(new NewsItemView(item));
             }
 
             return viewList;
         }
 
-        public void AddNews(NewsItem newsItem)
+        public List<NewsItemView> AddNews()
         {
-            if (!newsItemRepository.NewsItemExists(newsItem.Link)) { 
-                newsItemRepository.Add(newsItem);
-                newsItemRepository.Commit();
+            NewsFeedList feedList = new();
+            List<NewsItem> newsItems = new List<NewsItem>();
+            List<NewsItemView> items = new List<NewsItemView>();
+
+            foreach (NewsFeedBase newsFeed in feedList.FeedList)
+            {
+                List<NewsItem> newsFeedItems = newsFeed.GetNewsItems();
+                foreach(NewsItem item in newsFeedItems)
+                {
+                    if (newsItemRepository.NewsItemExists(item.Link)) continue;
+                    newsItemRepository.Add(item);
+                    items.Add(new NewsItemView(item));
+                }
             }
+
+            newsItemRepository.Commit();
+            return items;
         }
 
         public void RemoveNews(int Id)
@@ -104,6 +125,33 @@ namespace NewsAppNet.Services
             var news = newsItemRepository.GetSingle(Id);
             newsItemRepository.Delete(news);
             newsItemRepository.Commit();
+        }
+
+        public Dictionary<string, List<NewsItemView>> GetPopularNews()
+        {
+            var newsIdsFav = favoriteService.popularNewsIdFav();
+            var newsIdsCom = commentReplyService.popularNewsIdComment();
+
+            var newsItemsFav = newsItemRepository.GetManyOrdered(newsIdsFav);
+            var newsItemsCom = newsItemRepository.GetManyOrdered(newsIdsCom);
+
+            var newsViewFav = new List<NewsItemView>();
+            foreach (NewsItem item in newsItemsFav)
+            {
+                newsViewFav.Add(new NewsItemView(item));
+            }
+
+            var newsViewCom = new List<NewsItemView>();
+            foreach (NewsItem item in newsItemsCom)
+            {
+                newsViewCom.Add(new NewsItemView(item));
+            }
+
+            var dict = new Dictionary<string, List<NewsItemView>>();
+            dict.Add("favorites", newsViewFav);
+            dict.Add("comments", newsViewCom);
+
+            return dict;
         }
     }
 }
