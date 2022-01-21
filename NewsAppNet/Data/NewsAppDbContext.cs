@@ -2,6 +2,7 @@
 using NewsAppNet.Models.DataModels;
 using NewsAppNet.Services;
 using CryptoHelper;
+using NewsAppNet.Data.NewsFeeds.Feeds;
 
 namespace NewsAppNet.Data
 {
@@ -11,36 +12,17 @@ namespace NewsAppNet.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Reply> Replies { get; set; }
+        public DbSet<Favorite> Favorites { get; set; }
 
         public NewsAppDbContext(DbContextOptions<NewsAppDbContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            /*modelBuilder.Entity<NewsItem>(entity =>
-            {
-                entity.ToTable("NewsItems");
-            });
-
-            modelBuilder.Entity<User>(entity =>
-            {
-                entity.ToTable("Users");
-
-                entity.HasData(
-                    new User
-                    {
-                        Id = 1,
-                        Username = "Admin",
-                        FirstName = "Admin",
-                        LastName = "Admin",
-                        Password = Crypto.HashPassword("Admin"),
-                        UserType = "Admin"
-                    });
-            });
-            */
             ModelBuilderNewsItem(modelBuilder);
             ModelBuilderUser(modelBuilder);
             ModelBuilderComment(modelBuilder);
             ModelBuilderReply(modelBuilder);
+            ModelBuilderFavorite(modelBuilder);
         }
 
         void ModelBuilderNewsItem(ModelBuilder modelBuilder)
@@ -48,6 +30,15 @@ namespace NewsAppNet.Data
             modelBuilder.Entity<NewsItem>(entity =>
             {
                 entity.ToTable("NewsItems");
+
+                RuvFeed visirFeed = new();
+                int id = 1;
+                List<NewsItem> newsFeedItems = visirFeed.GetNewsItems().ToList();
+                newsFeedItems.ForEach(newsItem =>
+                {
+                    newsItem.Id = id++;
+                });
+                entity.HasData(newsFeedItems);
             });
         }
 
@@ -103,6 +94,24 @@ namespace NewsAppNet.Data
                 entity.HasOne(t => t.Comment)
                 .WithMany(t => t.Replies)
                 .HasForeignKey(t => t.CommentId);
+            });
+        }
+
+        void ModelBuilderFavorite(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Favorite>(entity =>
+            {
+                entity.HasKey(t => new { t.UserId, t.NewsItemId });
+
+                entity
+                    .HasOne(t => t.User)
+                    .WithMany(t => t.Favorites)
+                    .HasForeignKey(t => t.UserId);
+
+                entity
+                    .HasOne(t => t.NewsItem)
+                    .WithMany(t => t.Favorites)
+                    .HasForeignKey(t => t.NewsItemId);
             });
         }
     }

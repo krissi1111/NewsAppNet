@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NewsAppNet.Data;
 
@@ -11,9 +12,10 @@ using NewsAppNet.Data;
 namespace NewsAppNet.Migrations
 {
     [DbContext(typeof(NewsAppDbContext))]
-    partial class NewsAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220118183425_FavoriteMigration")]
+    partial class FavoriteMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
