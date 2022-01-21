@@ -10,9 +10,10 @@ namespace NewsAppNet.Services.Interfaces
         List<CommentView> GetCommentList(int newsId, int userId);
         void AddComment(int newsId, int userId, string commentText);
         void AddReply(int newsId, int userId, int commentId, string commentText);
-        /*void UpdateComment(int commentId, int userId, string commentText);
+        void EditComment(int commentId, int userId, string commentText);
+        void EditReply(int replyId, int userId, string replyText);
         void DeleteComment(int commentId, int userId);
         void DeleteReply(int replyId, int userId);
-        */
+        IEnumerable<int> popularNewsIdComment(int amount = 5);
     }
 }

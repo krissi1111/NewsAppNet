@@ -86,5 +86,78 @@ namespace NewsAppNet.Services
             replyRepository.Add(reply);
             replyRepository.Commit();
         }
+
+        public void EditComment(int commentId, int userId, string commentText)
+        {
+            Comment comment = commentRepository.GetSingle(commentId);
+            User currentUser = userService.GetUser(userId);
+
+            bool isAdmin = currentUser.UserType == "Admin";
+            bool isAllowed = (comment.UserId == currentUser.Id) || isAdmin;
+
+            if (isAllowed)
+            {
+                comment.Text = commentText;
+                commentRepository.Update(comment);
+                commentRepository.Commit();
+            }
+        }
+
+        public void EditReply(int replyId, int userId, string replyText)
+        {
+            Reply reply = replyRepository.GetSingle(replyId);
+            User currentUser = userService.GetUser(userId);
+
+            bool isAdmin = currentUser.UserType == "Admin";
+            bool isAllowed = (reply.UserId == currentUser.Id) || isAdmin;
+
+            if (isAllowed)
+            {
+                reply.Text = replyText;
+                replyRepository.Update(reply);
+                replyRepository.Commit();
+            }
+        }
+
+        public void DeleteComment(int commentId, int userId)
+        {
+            Comment comment = commentRepository.GetSingle(commentId);
+            User currentUser = userService.GetUser(userId);
+
+            bool isAdmin = currentUser.UserType == "Admin";
+            bool isAllowed = (comment.UserId == currentUser.Id) || isAdmin;
+
+            if (isAllowed)
+            {
+                commentRepository.Delete(comment);
+                commentRepository.Commit();
+            }
+        }
+
+        public void DeleteReply(int replyId, int userId)
+        {
+            Reply reply = replyRepository.GetSingle(replyId);
+            User currentUser = userService.GetUser(userId);
+
+            bool isAdmin = currentUser.UserType == "Admin";
+            bool isAllowed = (reply.UserId == currentUser.Id) || isAdmin;
+
+            if (isAllowed)
+            {
+                replyRepository.Delete(reply);
+                replyRepository.Commit();
+            }
+        }
+
+        public IEnumerable<int> popularNewsIdComment(int amount = 5)
+        {
+            var popularComments = commentRepository.GetAll()
+                .GroupBy(t => t.NewsItemId)
+                .OrderByDescending(t => t.Count())
+                .Select(t => t.Key)
+                .Take(amount);
+
+            return popularComments;
+        }
     }
 }
