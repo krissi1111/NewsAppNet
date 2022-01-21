@@ -1,4 +1,4 @@
-﻿using NewsAppNet.Models.DataModels;
+﻿using NewsAppNet.Models.DataModels.Interfaces;
 
 namespace NewsAppNet.Models.ViewModels
 {
