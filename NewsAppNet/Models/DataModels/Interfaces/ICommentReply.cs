@@ -1,4 +1,4 @@
-﻿namespace NewsAppNet.Models.DataModels
+﻿namespace NewsAppNet.Models.DataModels.Interfaces
 {
     public interface ICommentReply : IEntityBase
     {

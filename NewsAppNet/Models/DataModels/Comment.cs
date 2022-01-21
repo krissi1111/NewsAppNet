@@ -1,4 +1,6 @@
-﻿namespace NewsAppNet.Models.DataModels
+﻿using NewsAppNet.Models.DataModels.Interfaces;
+
+namespace NewsAppNet.Models.DataModels
 {
     public class Comment : ICommentReply
     {
