@@ -7,10 +7,21 @@ namespace NewsAppNet.Data.Repositories
     {
         public NewsItemRepository(NewsAppDbContext context) : base(context) { }
 
-        public bool NewsItemExists(string ItemLink)
+        public bool NewsItemExists(string itemLink)
         {
-            var news = GetSingle(news => news.Link == ItemLink);
+            var news = GetSingle(news => news.Link == itemLink);
             return news != null;
+        }
+
+        public IEnumerable<NewsItem> GetManyOrdered(IEnumerable<int> ids)
+        {
+            var newsItems = new List<NewsItem>();
+            foreach (var id in ids)
+            {
+                newsItems.Add(GetSingle(id));
+            }
+
+            return newsItems;
         }
     }
 }
