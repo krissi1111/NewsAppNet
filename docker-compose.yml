@@ -16,6 +16,7 @@ services:
 
     newsappnet:
         image: ${DOCKER_REGISTRY-}newsappnet
+        container_name: sampleBack
         build:
             context: .
             dockerfile: NewsAppNet/Dockerfile
@@ -26,7 +27,7 @@ services:
 
     newsapp-redux:
         image: ${DOCKER_REGISTRY-}newsapp-redux
-        container_name: sample
+        container_name: sampleFront
         ports:
             - 3001:3000
         environment:
