@@ -1,4 +1,6 @@
 ﻿
+using NewsAppNet.Models.DataModels.Interfaces;
+
 namespace NewsAppNet.Models.DataModels
 {
     public class NewsItem : IEntityBase
@@ -10,7 +12,8 @@ namespace NewsAppNet.Models.DataModels
         public string Link { get; set; } = string.Empty;
         public string Image { get; set; } = string.Empty;
         public DateTime Date { get; set; }
-        public IList<Comment> Comments { get; set; }
-        public IList<Reply> Replies { get; set; }
+        public IList<Comment>? Comments { get; set; }
+        public IList<Reply>? Replies { get; set; }
+        public IList<Favorite>? Favorites { get; set; }
     }
 }
