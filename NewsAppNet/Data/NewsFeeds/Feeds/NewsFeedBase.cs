@@ -1,8 +1,9 @@
-﻿using NewsAppNet.Models.DataModels;
+﻿using NewsAppNet.Data.NewsFeeds.ItemBuilder;
+using NewsAppNet.Models.DataModels;
 using System.ServiceModel.Syndication;
 using System.Xml;
 
-namespace NewsAppNet.Data.NewsFeeds
+namespace NewsAppNet.Data.NewsFeeds.Feeds
 {
     public class NewsFeedBase : INewsFeedBase
     {
@@ -22,7 +23,7 @@ namespace NewsAppNet.Data.NewsFeeds
             SyndicationFeed feed = ReadFeed();
 
             List<NewsItem> feedItemList = new();
-            foreach(SyndicationItem item in feed.Items)
+            foreach (SyndicationItem item in feed.Items)
             {
                 NewsItem entry = GetItem(item);
                 feedItemList.Add(entry);

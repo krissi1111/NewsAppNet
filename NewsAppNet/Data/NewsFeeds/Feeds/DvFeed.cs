@@ -1,6 +1,7 @@
-﻿using System.ServiceModel.Syndication;
+﻿using NewsAppNet.Data.NewsFeeds.ItemBuilder;
+using System.ServiceModel.Syndication;
 
-namespace NewsAppNet.Data.NewsFeeds
+namespace NewsAppNet.Data.NewsFeeds.Feeds
 {
     public class DvFeed : NewsFeedBase
     {

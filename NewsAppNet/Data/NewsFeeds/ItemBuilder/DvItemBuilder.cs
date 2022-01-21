@@ -1,4 +1,5 @@
-﻿using System.ServiceModel.Syndication;
+﻿using NewsAppNet.Data.NewsFeeds.ItemBuilder;
+using System.ServiceModel.Syndication;
 
 namespace NewsAppNet.Data.NewsFeeds
 {

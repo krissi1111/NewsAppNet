@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ServiceModel.Syndication;
 
-namespace NewsAppNet.Data.NewsFeeds
+namespace NewsAppNet.Data.NewsFeeds.ItemBuilder
 {
     public class NewsItemBuilder : INewsItemBuilder
     {

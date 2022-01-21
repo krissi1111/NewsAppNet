@@ -1,4 +1,4 @@
-﻿namespace NewsAppNet.Data.NewsFeeds
+﻿namespace NewsAppNet.Data.NewsFeeds.ItemBuilder
 {
     public interface INewsItemBuilder
     {

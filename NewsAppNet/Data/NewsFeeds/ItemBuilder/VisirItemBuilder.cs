@@ -1,10 +1,10 @@
 ﻿using System.ServiceModel.Syndication;
 
-namespace NewsAppNet.Data.NewsFeeds
+namespace NewsAppNet.Data.NewsFeeds.ItemBuilder
 {
-    public class RuvItemBuilder : NewsItemBuilder
+    public class VisirItemBuilder : NewsItemBuilder
     {
-        public RuvItemBuilder(SyndicationItem item) : base(item) { }
+        public VisirItemBuilder(SyndicationItem item) : base(item) { }
 
         public override string GetImage()
         {
@@ -12,7 +12,7 @@ namespace NewsAppNet.Data.NewsFeeds
             using (HttpClient client = new())
             {
                 string linkContent = client.GetStringAsync(link).Result;
-                int start = linkContent.IndexOf("https://www.ruv.is/sites/default/files/styles");
+                int start = linkContent.IndexOf("https://www.visir.is/i/");
                 if (start == -1)
                 {
                     return NoImage;

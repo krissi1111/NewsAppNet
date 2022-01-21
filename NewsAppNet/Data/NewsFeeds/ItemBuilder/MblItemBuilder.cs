@@ -1,6 +1,6 @@
 ﻿using System.ServiceModel.Syndication;
 
-namespace NewsAppNet.Data.NewsFeeds
+namespace NewsAppNet.Data.NewsFeeds.ItemBuilder
 {
     public class MblItemBuilder : NewsItemBuilder
     {
