@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using NewsAppNet.Data.Repositories.Interfaces;
-using NewsAppNet.Models.DataModels;
+using NewsAppNet.Models.DataModels.Interfaces;
 
 namespace NewsAppNet.Data.Repositories
 {
@@ -30,7 +30,7 @@ namespace NewsAppNet.Data.Repositories
         {
             return _context.Set<T>().Where(query);
         }
-        public virtual IEnumerable<T> GetMany(int[] ids)
+        public virtual IEnumerable<T> GetMany(IEnumerable<int> ids)
         {
             return _context.Set<T>().Where(t => ids.Contains(t.Id));
         }
