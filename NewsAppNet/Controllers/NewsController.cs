@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using NewsAppNet.Data.NewsFeeds;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using NewsAppNet.Data.NewsFeeds.Feeds;
 using NewsAppNet.Data.Repositories.Interfaces;
 using NewsAppNet.Models.DataModels;
 using NewsAppNet.Models.ViewModels;
@@ -12,12 +13,28 @@ namespace NewsAppNet.Controllers
     public class NewsController : ControllerBase
     {
         INewsService newsService;
+        ICommentReplyService commentReplyService;
+        IFavoriteService favoriteService;
 
         public NewsController(
-            INewsService newsService
+            INewsService newsService,
+            ICommentReplyService commentReplyService,
+            IFavoriteService favoriteService
             ) 
         { 
             this.newsService = newsService;
+            this.commentReplyService = commentReplyService;
+            this.favoriteService = favoriteService;
+        }
+
+        public int GetUserId()
+        {
+            int userId = -1;
+            if (HttpContext.User.Identity.Name != null)
+            {
+                userId = Int32.Parse(HttpContext.User.Identity.Name);
+            }
+            return userId;
         }
 
         [HttpGet]
@@ -36,18 +53,7 @@ namespace NewsAppNet.Controllers
         [HttpGet("Add")]
         public ActionResult AddNews()
         {
-            RuvFeed visirFeed = new();
-
-            List<NewsItemView> items = new List<NewsItemView>();
-            List<NewsItem> newsFeedItems = visirFeed.GetNewsItems();
-
-            foreach(NewsItem item in newsFeedItems)
-            {
-                newsService.AddNews(item);
-                items.Add(new NewsItemView(item));
-            }
-
-            return new JsonResult(items);
+            return new JsonResult(newsService.AddNews());
         }
 
         [HttpGet("delete")]
@@ -58,6 +64,52 @@ namespace NewsAppNet.Controllers
             {
                 newsService.RemoveNews(item.Id);
             }
+        }
+
+        [HttpPost("commentList")]
+        public ActionResult GetNewsCommentList([FromForm] int newsId)
+        {
+            int userId = GetUserId();
+            var commentList = commentReplyService.GetCommentList(newsId, userId);
+
+            return new JsonResult(commentList);
+        }
+
+        [Authorize]
+        [HttpPost("favAddRemove")]
+        public ActionResult favAddRemove([FromForm] int newsId)
+        {
+            int userId = GetUserId();
+            if (userId == -1)
+            {
+                return BadRequest(new { Login = "User not logged in" });
+            }
+
+            favoriteService.AddRemoveFavorite(newsId, userId);
+            return favUserFavorites();
+            //return Ok();
+        }
+
+        [Authorize]
+        [HttpGet("userFav")]
+        public ActionResult favUserFavorites()
+        {
+            int userId = GetUserId();
+            if (userId == -1)
+            {
+                return BadRequest(new { Login = "User not logged in" });
+            }
+
+            var favList = favoriteService.GetUserFavorites(userId);
+
+            return new JsonResult(favList);
+        }
+
+        [HttpGet("popularComments")]
+        public ActionResult GetPopularNews()
+        {
+            var popularNews = newsService.GetPopularNews();
+            return new JsonResult(popularNews);
         }
     }
 }

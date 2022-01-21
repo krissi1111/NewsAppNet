@@ -21,6 +21,16 @@ namespace NewsAppNet.Controllers
             this.authService = authService;
         }
 
+        public int GetUserId()
+        {
+            int userId = -1;
+            if (HttpContext.User.Identity.Name != null)
+            {
+                userId = Int32.Parse(HttpContext.User.Identity.Name);
+            }
+            return userId;
+        }
+
         [HttpPost("login")]
         public ActionResult<UserAuthData> Login([FromForm] User user)
         {
@@ -37,8 +47,8 @@ namespace NewsAppNet.Controllers
         [HttpPost("status")]
         public ActionResult<UserAuthData> LoginCheck()
         {
-            var id = HttpContext.User.Identity.Name;
-            var user = userService.GetUser(Int32.Parse(id));
+            var id = GetUserId();
+            var user = userService.GetUser(id);
             var userAuth = authService.GetUserAuthData(user);
 
             return userAuth;
