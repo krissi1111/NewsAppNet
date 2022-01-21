@@ -38,9 +38,11 @@ builder.Services.AddScoped<INewsItemRepository, NewsItemRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<IReplyRepository, ReplyRepository>();
+builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
 builder.Services.AddScoped<INewsService, NewsService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICommentReplyService, CommentReplyService>();
+builder.Services.AddScoped<IFavoriteService, FavoriteService>();
 
 builder.Services.AddSingleton<IAuthService>(
     new AuthService(
