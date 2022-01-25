@@ -31,14 +31,21 @@ namespace NewsAppNet.Data
             {
                 entity.ToTable("NewsItems");
 
-                RuvFeed visirFeed = new();
+                NewsFeedList feedList = new();
+                List<NewsItem> newsItems = new List<NewsItem>();
+
+                foreach (NewsFeedBase newsFeed in feedList.FeedList)
+                {
+                    newsItems.AddRange(newsFeed.GetNewsItems());
+                }
+
                 int id = 1;
-                List<NewsItem> newsFeedItems = visirFeed.GetNewsItems().ToList();
-                newsFeedItems.ForEach(newsItem =>
+                newsItems.ForEach(newsItem =>
                 {
                     newsItem.Id = id++;
                 });
-                entity.HasData(newsFeedItems);
+
+                entity.HasData(newsItems);
             });
         }
 
@@ -58,6 +65,46 @@ namespace NewsAppNet.Data
                         Password = Crypto.HashPassword("Admin"),
                         UserType = "Admin"
                     });
+                entity.HasData(
+                    new User
+                    {
+                        Id = 2,
+                        Username = "kalli",
+                        FirstName = "Karl",
+                        LastName = "Arnarsson",
+                        Password = Crypto.HashPassword("passi"),
+                        UserType = "User"
+                    });
+                entity.HasData(
+                    new User
+                    {
+                        Id = 3,
+                        Username = "jonas",
+                        FirstName = "Jónas",
+                        LastName = "Þórsson",
+                        Password = Crypto.HashPassword("passi"),
+                        UserType = "User"
+                    });
+                entity.HasData(
+                    new User
+                    {
+                        Id = 4,
+                        Username = "Sigga",
+                        FirstName = "Sigrún",
+                        LastName = "Jónsdóttir",
+                        Password = Crypto.HashPassword("passi"),
+                        UserType = "User"
+                    });
+                entity.HasData(
+                    new User
+                    {
+                        Id = 5,
+                        Username = "örn",
+                        FirstName = "Örn",
+                        LastName = "Atlason",
+                        Password = Crypto.HashPassword("passi"),
+                        UserType = "User"
+                    });
             });
         }
 
@@ -74,6 +121,16 @@ namespace NewsAppNet.Data
                 entity.HasOne(t => t.NewsItem)
                 .WithMany(t => t.Comments)
                 .HasForeignKey(t => t.NewsItemId);
+
+                entity.HasData(
+                    new Comment
+                    {
+                        Id = 1,
+                        NewsItemId = 1,
+                        UserId = 2,
+                        Text = "komment",
+                        Date = DateTime.Now,
+                    });
             });
         }
 
@@ -94,6 +151,17 @@ namespace NewsAppNet.Data
                 entity.HasOne(t => t.Comment)
                 .WithMany(t => t.Replies)
                 .HasForeignKey(t => t.CommentId);
+
+                entity.HasData(
+                    new Reply
+                    {
+                        Id = 1,
+                        NewsItemId = 1,
+                        UserId = 3,
+                        CommentId = 1,
+                        Text = "reply",
+                        Date = DateTime.Now,
+                    });
             });
         }
 
@@ -112,6 +180,14 @@ namespace NewsAppNet.Data
                     .HasOne(t => t.NewsItem)
                     .WithMany(t => t.Favorites)
                     .HasForeignKey(t => t.NewsItemId);
+
+                entity.HasData(
+                    new Favorite
+                    {
+                        Id = 1,
+                        UserId = 2,
+                        NewsItemId = 1,
+                    });
             });
         }
     }
