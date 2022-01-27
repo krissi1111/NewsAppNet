@@ -5,7 +5,7 @@
     <DockerTargetOS>Linux</DockerTargetOS>
     <ProjectGuid>e288430f-d8cf-4b76-84e8-578118b860f1</ProjectGuid>
     <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
-    <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/weatherforecast</DockerServiceUrl>
+    <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/news</DockerServiceUrl>
     <DockerServiceName>newsappnet</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
