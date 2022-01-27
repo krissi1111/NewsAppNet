@@ -59,10 +59,10 @@ namespace NewsAppNet.Data
                     new User
                     {
                         Id = 1,
-                        Username = "Admin",
+                        Username = "admin",
                         FirstName = "Admin",
                         LastName = "Admin",
-                        Password = Crypto.HashPassword("Admin"),
+                        Password = Crypto.HashPassword("admin"),
                         UserType = "Admin"
                     });
                 entity.HasData(
@@ -131,6 +131,24 @@ namespace NewsAppNet.Data
                         Text = "komment",
                         Date = DateTime.Now,
                     });
+                entity.HasData(
+                    new Comment
+                    {
+                        Id = 2,
+                        NewsItemId = 3,
+                        UserId = 4,
+                        Text = "komment",
+                        Date = DateTime.Now,
+                    });
+                entity.HasData(
+                    new Comment
+                    {
+                        Id = 3,
+                        NewsItemId = 2,
+                        UserId = 3,
+                        Text = "komment",
+                        Date = DateTime.Now,
+                    });
             });
         }
 
@@ -142,15 +160,18 @@ namespace NewsAppNet.Data
 
                 entity.HasOne(t => t.User)
                 .WithMany(t => t.Replies)
-                .HasForeignKey(t => t.UserId);
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(t => t.NewsItem)
                 .WithMany(t => t.Replies)
-                .HasForeignKey(t => t.NewsItemId);
+                .HasForeignKey(t => t.NewsItemId)
+                .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(t => t.Comment)
                 .WithMany(t => t.Replies)
-                .HasForeignKey(t => t.CommentId);
+                .HasForeignKey(t => t.CommentId)
+                .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasData(
                     new Reply
@@ -158,6 +179,16 @@ namespace NewsAppNet.Data
                         Id = 1,
                         NewsItemId = 1,
                         UserId = 3,
+                        CommentId = 1,
+                        Text = "reply",
+                        Date = DateTime.Now,
+                    });
+                entity.HasData(
+                    new Reply
+                    {
+                        Id = 2,
+                        NewsItemId = 1,
+                        UserId = 4,
                         CommentId = 1,
                         Text = "reply",
                         Date = DateTime.Now,
@@ -187,6 +218,20 @@ namespace NewsAppNet.Data
                         Id = 1,
                         UserId = 2,
                         NewsItemId = 1,
+                    });
+                entity.HasData(
+                    new Favorite
+                    {
+                        Id = 2,
+                        UserId = 3,
+                        NewsItemId = 1,
+                    });
+                entity.HasData(
+                    new Favorite
+                    {
+                        Id = 3,
+                        UserId = 2,
+                        NewsItemId = 2,
                     });
             });
         }
