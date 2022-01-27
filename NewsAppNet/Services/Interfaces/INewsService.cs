@@ -8,8 +8,8 @@ namespace NewsAppNet.Services.Interfaces
         List<NewsItemView> GetNews();
         NewsItemView GetNews(int Id);
         List<NewsItemView> GetNewsSearch(Search search);
-        List<NewsItemView> AddNews();
-        void RemoveNews(int Id);
+        List<NewsItemView> AddNews(int userId);
+        void DeleteNews(int newsId, int userId);
         Dictionary<string, List<NewsItemView>> GetPopularNews();
     }
 }
