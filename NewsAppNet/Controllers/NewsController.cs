@@ -50,20 +50,20 @@ namespace NewsAppNet.Controllers
             return new JsonResult(viewList);
         }
 
+        [Authorize]
         [HttpGet("Add")]
         public ActionResult AddNews()
         {
-            return new JsonResult(newsService.AddNews());
+            int userId = GetUserId();
+            return new JsonResult(newsService.AddNews(userId));
         }
 
-        [HttpGet("delete")]
-        public void Delete()
+        [Authorize]
+        [HttpPost("delete")]
+        public void Delete([FromForm] int newsId)
         {
-            var news = newsService.GetNews();
-            foreach(var item in news)
-            {
-                newsService.RemoveNews(item.Id);
-            }
+            int userId = GetUserId();
+            newsService.DeleteNews(newsId, userId);
         }
 
         [HttpPost("commentList")]

@@ -12,18 +12,22 @@ namespace NewsAppNet.Services
         INewsItemRepository newsItemRepository;
         ICommentReplyService commentReplyService;
         IFavoriteService favoriteService;
+        IUserService userService;
 
         public NewsService(
             INewsItemRepository newsItemRepository,
             ICommentReplyService commentReplyService, 
-            IFavoriteService favoriteService
+            IFavoriteService favoriteService,
+            IUserService userService
             )
         {
             this.newsItemRepository = newsItemRepository;
             this.commentReplyService = commentReplyService;
             this.favoriteService = favoriteService;
+            this.userService = userService;
         }
 
+        // Gets all news items and returns, ordered by most recent
         public List<NewsItemView> GetNews()
         {
             IEnumerable<NewsItem> news = newsItemRepository.GetAll();
@@ -47,6 +51,7 @@ namespace NewsAppNet.Services
             return view;
         }
 
+        // Returns news items based on search criteria
         public List<NewsItemView> GetNewsSearch(Search search)
         {
             var title = search.Title;
@@ -99,34 +104,57 @@ namespace NewsAppNet.Services
             return viewList;
         }
 
-        public List<NewsItemView> AddNews()
+        // Adds new news items from all news feeds
+        public List<NewsItemView> AddNews(int userId)
         {
-            NewsFeedList feedList = new();
-            List<NewsItem> newsItems = new List<NewsItem>();
+            User currentUser = userService.GetUser(userId);
+            bool isAdmin = currentUser.UserType == "Admin";
+
             List<NewsItemView> items = new List<NewsItemView>();
 
-            foreach (NewsFeedBase newsFeed in feedList.FeedList)
+            if (isAdmin)
             {
-                List<NewsItem> newsFeedItems = newsFeed.GetNewsItems();
-                foreach(NewsItem item in newsFeedItems)
-                {
-                    if (newsItemRepository.NewsItemExists(item.Link)) continue;
-                    newsItemRepository.Add(item);
-                    items.Add(new NewsItemView(item));
-                }
-            }
+                NewsFeedList feedList = new();
+                
 
-            newsItemRepository.Commit();
+                foreach (NewsFeedBase newsFeed in feedList.FeedList)
+                {
+                    List<NewsItem> newsFeedItems = newsFeed.GetNewsItems();
+                    foreach (NewsItem item in newsFeedItems)
+                    {
+                        if (newsItemRepository.NewsItemExists(item.Link)) continue;
+                        newsItemRepository.Add(item);
+                        items.Add(new NewsItemView(item));
+                    }
+                }
+
+                newsItemRepository.Commit();
+            }
             return items;
         }
 
-        public void RemoveNews(int Id)
+        public void DeleteNews(int newsId, int userId)
         {
-            var news = newsItemRepository.GetSingle(Id);
-            newsItemRepository.Delete(news);
-            newsItemRepository.Commit();
+            User currentUser = userService.GetUser(userId);
+            bool isAdmin = currentUser.UserType == "Admin";
+
+            if (isAdmin)
+            {
+                // Need to manually delete comments and replies 
+                // because of foreign key relationships
+                var comments = commentReplyService.GetComments(newsId).ToList();
+                foreach (Comment comment in comments)
+                {
+                    commentReplyService.DeleteComment(comment.Id, userId);
+                }
+
+                var news = newsItemRepository.GetSingle(newsId);
+                newsItemRepository.Delete(news);
+                newsItemRepository.Commit();
+            }
         }
 
+        // Returns most popular news items based on number of comments, favorites
         public Dictionary<string, List<NewsItemView>> GetPopularNews()
         {
             var newsIdsFav = favoriteService.popularNewsIdFav();
