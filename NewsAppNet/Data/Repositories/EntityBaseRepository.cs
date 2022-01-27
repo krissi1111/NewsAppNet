@@ -45,7 +45,8 @@ namespace NewsAppNet.Data.Repositories
         public virtual void Add(T entity)
         {
             EntityEntry dbEntityEntry = _context.Entry(entity);
-            _context.Set<T>().Add(entity);
+            //_context.Set<T>().Add(entity);
+            dbEntityEntry.State = EntityState.Added;// .Add(entity);
         }
         public virtual void Update(T entity)
         {
