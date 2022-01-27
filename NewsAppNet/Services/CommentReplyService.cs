@@ -129,6 +129,14 @@ namespace NewsAppNet.Services
 
             if (isAllowed)
             {
+                // Need to manually delete replies 
+                // because of foreign key relationships
+                var replies = GetReplies(comment.NewsItemId).ToList();
+                foreach (Reply reply in replies)
+                {
+                    if(reply.CommentId == commentId) DeleteReply(reply.Id, userId);
+                }
+
                 commentRepository.Delete(comment);
                 commentRepository.Commit();
             }
