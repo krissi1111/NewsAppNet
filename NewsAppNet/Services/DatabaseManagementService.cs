@@ -10,7 +10,8 @@ namespace NewsAppNet.Services
             using (var serviceScope = app.ApplicationServices.CreateScope())
             {
                 // Takes all of our migrations files and apply them against the database in case they are not implemented
-                serviceScope.ServiceProvider.GetService<NewsAppDbContext>().Database.Migrate();
+                serviceScope.ServiceProvider.GetService<NewsAppDbContext>().Database.EnsureCreated();
+                //serviceScope.ServiceProvider.GetService<NewsAppDbContext>().Database.Migrate();
             }
         }
     }
