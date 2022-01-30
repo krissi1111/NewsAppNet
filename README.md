@@ -6,7 +6,7 @@ It is meant to be run in conjunction with the frontend [here](https://github.com
 
 The project is set up to run using Docker and can be run using the docker-compose.yml file seen below.
 
-
+The backend is set up to run using a database that is only supplied through docker using the MSSQL image so running the backend independently doesn't really work.
 
 docker-compose.yml
 ```
