@@ -8,6 +8,10 @@ The project is set up to run using Docker and can be run using the docker-compos
 
 The backend is set up to run using a database that is only supplied through docker using the MSSQL image so running the backend independently doesn't really work.
 
+To run the project save the docker-compose.yml file on your computer and then call 
+
+### `docker-compose -f (your path here)\docker-compose.yml up`
+
 docker-compose.yml
 ```
 
