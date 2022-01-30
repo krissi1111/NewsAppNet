@@ -12,6 +12,8 @@ To run the project save the docker-compose.yml file on your computer and then ca
 
 ### `docker-compose -f (your path here)\docker-compose.yml up`
 
+assuming you have docker installed.
+
 docker-compose.yml
 ```
 
