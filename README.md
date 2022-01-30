@@ -14,6 +14,8 @@ To run the project save the docker-compose.yml file on your computer and then ca
 
 assuming you have docker installed.
 
+The frontend can then be viewed at http://localhost:3000/ in your browser.
+
 docker-compose.yml
 ```
 
