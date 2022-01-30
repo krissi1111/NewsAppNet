@@ -16,6 +16,8 @@ assuming you have docker installed.
 
 The frontend can then be viewed at http://localhost:3000/ in your browser.
 
+The database will be automatically seeded with some data including an admin account. The admin account can be accessed by logging in with username: admin and password: admin. Alternatively you can register your own account. 
+
 docker-compose.yml
 ```
 
