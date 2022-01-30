@@ -12,7 +12,7 @@ To run the project save the docker-compose.yml file on your computer and then ca
 
 ### `docker-compose -f (your path here)\docker-compose.yml up`
 
-assuming you have docker installed.
+using cmd, assuming you have docker installed.
 
 The frontend can then be viewed at http://localhost:3000/ in your browser.
 
