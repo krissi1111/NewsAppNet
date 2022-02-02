@@ -4,9 +4,7 @@ namespace NewsAppNet.Data.NewsFeeds.ItemBuilder
 {
     public class MblItemBuilder : NewsItemBuilder
     {
-        public MblItemBuilder(SyndicationItem item) : base(item) { }
-
-        public override string GetSummary()
+        public override string GetSummary(SyndicationItem Item)
         {
             string summary = Item.Summary.Text;
             int start = summary.IndexOf(">");
@@ -15,7 +13,7 @@ namespace NewsAppNet.Data.NewsFeeds.ItemBuilder
             return summary.Substring(start, end);
         }
 
-        public override string GetImage()
+        public override string GetImage(SyndicationItem Item)
         {
             string summary = Item.Summary.Text;
             int start = summary.IndexOf("https://cdn.mbl.is/frimg");

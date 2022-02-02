@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewsAppNet.Data.NewsFeeds.Feeds;
+using NewsAppNet.Data.NewsFeeds.ItemBuilder;
 using NewsAppNet.Data.Repositories.Interfaces;
 using NewsAppNet.Models.DataModels;
 using NewsAppNet.Models.ViewModels;
@@ -117,7 +118,7 @@ namespace NewsAppNet.Services
                 NewsFeedList feedList = new();
                 
 
-                foreach (NewsFeedBase newsFeed in feedList.FeedList)
+                foreach (INewsFeedBase newsFeed in feedList.FeedList)
                 {
                     List<NewsItem> newsFeedItems = newsFeed.GetNewsItems();
                     foreach (NewsItem item in newsFeedItems)

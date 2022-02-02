@@ -9,7 +9,6 @@ namespace NewsAppNet.Data.NewsFeeds.Feeds
     {
         SyndicationFeed ReadFeed();
         List<NewsItem> GetNewsItems();
-        NewsItemBuilder BuildItem(SyndicationItem item);
         NewsItem GetItem(SyndicationItem item);
     }
 }

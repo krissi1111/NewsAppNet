@@ -4,13 +4,15 @@ namespace NewsAppNet.Data.NewsFeeds.ItemBuilder
 {
     public class VisirItemBuilder : NewsItemBuilder
     {
-        public VisirItemBuilder(SyndicationItem item) : base(item) { }
-
-        public override string GetImage()
+        public override string GetImage(SyndicationItem Item)
         {
-            string link = GetLink();
+            string link = GetLink(Item);
             using (HttpClient client = new())
             {
+                // Check if fetching link is successful
+                HttpResponseMessage response = client.GetAsync(link).Result;
+                if (!response.IsSuccessStatusCode) return NoImage;
+
                 string linkContent = client.GetStringAsync(link).Result;
                 int start = linkContent.IndexOf("https://www.visir.is/i/");
                 if (start == -1)

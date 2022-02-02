@@ -5,10 +5,11 @@ using System.Xml;
 
 namespace NewsAppNet.Data.NewsFeeds.Feeds
 {
-    public class NewsFeedBase : INewsFeedBase
+    public class NewsFeedBase<T> : INewsFeedBase where T : class, INewsItemBuilder, new()
     {
         public string Url { get; set; } = string.Empty;
         public string FeedName { get; set; } = string.Empty;
+        private T ItemBuilder = new T();
 
         public SyndicationFeed ReadFeed()
         {
@@ -31,23 +32,16 @@ namespace NewsAppNet.Data.NewsFeeds.Feeds
             return feedItemList;
         }
 
-        public virtual NewsItemBuilder BuildItem(SyndicationItem item)
-        {
-            return new NewsItemBuilder(item);
-        }
-
         public NewsItem GetItem(SyndicationItem item)
         {
-            NewsItemBuilder itemBuilder = BuildItem(item);
-
             NewsItem news = new()
             {
                 Origin = FeedName,
-                Title = itemBuilder.GetTitle(),
-                Summary = itemBuilder.GetSummary(),
-                Link = itemBuilder.GetLink(),
-                Image = itemBuilder.GetImage(),
-                Date = itemBuilder.GetDate()
+                Title = ItemBuilder.GetTitle(item),
+                Summary = ItemBuilder.GetSummary(item),
+                Link = ItemBuilder.GetLink(item),
+                Image = ItemBuilder.GetImage(item),
+                Date = ItemBuilder.GetDate(item)
             };
 
             return news;

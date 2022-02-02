@@ -34,7 +34,7 @@ namespace NewsAppNet.Data
                 NewsFeedList feedList = new();
                 List<NewsItem> newsItems = new List<NewsItem>();
 
-                foreach (NewsFeedBase newsFeed in feedList.FeedList)
+                foreach (INewsFeedBase newsFeed in feedList.FeedList)
                 {
                     newsItems.AddRange(newsFeed.GetNewsItems());
                 }

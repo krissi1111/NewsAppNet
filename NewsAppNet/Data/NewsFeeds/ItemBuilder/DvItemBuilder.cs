@@ -1,13 +1,10 @@
-﻿using NewsAppNet.Data.NewsFeeds.ItemBuilder;
-using System.ServiceModel.Syndication;
+﻿using System.ServiceModel.Syndication;
 
-namespace NewsAppNet.Data.NewsFeeds
+namespace NewsAppNet.Data.NewsFeeds.ItemBuilder
 {
     public class DvItemBuilder : NewsItemBuilder
     {
-        public DvItemBuilder(SyndicationItem item) : base(item) { }
-
-        public override string GetSummary()
+        public override string GetSummary(SyndicationItem Item)
         {
             string summary = Item.Summary.Text;
             int start = summary.IndexOf("<p>");
@@ -20,7 +17,7 @@ namespace NewsAppNet.Data.NewsFeeds
             return summary.Substring(start, stop);
         }
 
-        public override string GetImage()
+        public override string GetImage(SyndicationItem Item)
         {
             string summary = Item.Summary.Text;
             int start = summary.IndexOf("src=");
