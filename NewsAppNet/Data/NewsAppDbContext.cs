@@ -30,7 +30,7 @@ namespace NewsAppNet.Data
             modelBuilder.Entity<NewsItem>(entity =>
             {
                 entity.ToTable("NewsItems");
-
+                /*
                 NewsFeedList feedList = new();
                 List<NewsItem> newsItems = new List<NewsItem>();
 
@@ -46,6 +46,7 @@ namespace NewsAppNet.Data
                 });
 
                 entity.HasData(newsItems);
+                */
             });
         }
 
@@ -54,7 +55,7 @@ namespace NewsAppNet.Data
             modelBuilder.Entity<User>(entity =>
             {
                 entity.ToTable("Users");
-
+                /*
                 entity.HasData(
                     new User
                     {
@@ -105,6 +106,7 @@ namespace NewsAppNet.Data
                         Password = Crypto.HashPassword("passi"),
                         UserType = "User"
                     });
+                */
             });
         }
 
@@ -121,7 +123,7 @@ namespace NewsAppNet.Data
                 entity.HasOne(t => t.NewsItem)
                 .WithMany(t => t.Comments)
                 .HasForeignKey(t => t.NewsItemId);
-
+                /*
                 entity.HasData(
                     new Comment
                     {
@@ -149,6 +151,7 @@ namespace NewsAppNet.Data
                         Text = "komment",
                         Date = DateTime.Now,
                     });
+                */
             });
         }
 
@@ -172,7 +175,7 @@ namespace NewsAppNet.Data
                 .WithMany(t => t.Replies)
                 .HasForeignKey(t => t.CommentId)
                 .OnDelete(DeleteBehavior.Restrict);
-
+                /*
                 entity.HasData(
                     new Reply
                     {
@@ -193,6 +196,7 @@ namespace NewsAppNet.Data
                         Text = "reply",
                         Date = DateTime.Now,
                     });
+                */
             });
         }
 
@@ -211,7 +215,7 @@ namespace NewsAppNet.Data
                     .HasOne(t => t.NewsItem)
                     .WithMany(t => t.Favorites)
                     .HasForeignKey(t => t.NewsItemId);
-
+                /*
                 entity.HasData(
                     new Favorite
                     {
@@ -233,6 +237,7 @@ namespace NewsAppNet.Data
                         UserId = 2,
                         NewsItemId = 2,
                     });
+                */
             });
         }
     }
