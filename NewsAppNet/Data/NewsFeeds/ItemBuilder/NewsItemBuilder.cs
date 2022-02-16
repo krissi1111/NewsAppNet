@@ -8,17 +8,22 @@ namespace NewsAppNet.Data.NewsFeeds.ItemBuilder
 
         public virtual string GetTitle(SyndicationItem Item)
         {
-            return Item.Title.Text;
+            if (Item.Title == null) return "NO TITLE";
+            else return Item.Title.Text;
         }
 
         public virtual string GetSummary(SyndicationItem Item)
         {
-            return Item.Summary.Text;
+            var summary = Item.Summary.Text;
+            if (summary == null) return "NO SUMMARY";
+            else return summary;
         }
 
         public virtual string GetLink(SyndicationItem Item)
         {
-            return Item.Links[0].GetAbsoluteUri().ToString();
+            var link = Item.Links[0].GetAbsoluteUri().ToString();
+            if (link == null) return "NO LINK";
+            else return link;
         }
 
         public virtual string GetImage(SyndicationItem Item)

@@ -11,14 +11,25 @@ namespace NewsAppNet.Data.NewsFeeds.Feeds
         public string FeedName { get; set; } = string.Empty;
         private T ItemBuilder = new T();
 
+        // Attempts to read news feed and returns as SyndicationFeed object
         public SyndicationFeed ReadFeed()
         {
-            XmlReader reader = XmlReader.Create(Url);
-            SyndicationFeed feed = SyndicationFeed.Load(reader);
-            reader.Close();
+            SyndicationFeed feed = new();
+            try
+            {
+                XmlReader reader = XmlReader.Create(Url);
+                feed = SyndicationFeed.Load(reader);
+                reader.Close();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
             return feed;
         }
 
+        // Transforms all news articles from SyndicationFeed into a 
+        // list of NewsItems using the news feeds specific NewsItemBuilder
         public List<NewsItem> GetNewsItems()
         {
             SyndicationFeed feed = ReadFeed();
@@ -26,25 +37,19 @@ namespace NewsAppNet.Data.NewsFeeds.Feeds
             List<NewsItem> feedItemList = new();
             foreach (SyndicationItem item in feed.Items)
             {
-                NewsItem entry = GetItem(item);
-                feedItemList.Add(entry);
+                NewsItem newsItem = new()
+                {
+                    Origin = FeedName,
+                    Title = ItemBuilder.GetTitle(item),
+                    Summary = ItemBuilder.GetSummary(item),
+                    Link = ItemBuilder.GetLink(item),
+                    Image = ItemBuilder.GetImage(item),
+                    Date = ItemBuilder.GetDate(item)
+                };
+
+                feedItemList.Add(newsItem);
             }
             return feedItemList;
-        }
-
-        public NewsItem GetItem(SyndicationItem item)
-        {
-            NewsItem news = new()
-            {
-                Origin = FeedName,
-                Title = ItemBuilder.GetTitle(item),
-                Summary = ItemBuilder.GetSummary(item),
-                Link = ItemBuilder.GetLink(item),
-                Image = ItemBuilder.GetImage(item),
-                Date = ItemBuilder.GetDate(item)
-            };
-
-            return news;
         }
     }
 }
