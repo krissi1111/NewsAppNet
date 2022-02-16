@@ -5,11 +5,12 @@ namespace NewsAppNet.Services.Interfaces
 {
     public interface INewsService
     {
-        List<NewsItemView> GetNews();
-        NewsItemView GetNews(int Id);
-        List<NewsItemView> GetNewsSearch(Search search);
-        List<NewsItemView> AddNews(int userId);
-        void DeleteNews(int newsId, int userId);
-        Dictionary<string, List<NewsItemView>> GetPopularNews();
+        bool NewsItemExists(int newsId);
+        ServiceResponse<List<NewsItemView>> GetNewsAll();
+        ServiceResponse<NewsItemView> GetNews(int Id);
+        ServiceResponse<List<NewsItemView>> GetNewsSearch(Search search);
+        ServiceResponse<List<NewsItemView>> AddNews(int userId);
+        ServiceResponse<NewsItemView> DeleteNews(int newsId, int userId);
+        ServiceResponse<Dictionary<string, List<NewsItemView>>> GetPopularNews(int amount = 5);
     }
 }

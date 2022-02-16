@@ -7,13 +7,12 @@ namespace NewsAppNet.Services.Interfaces
     {
         IEnumerable<Comment> GetComments(int newsId);
         IEnumerable<Reply> GetReplies(int newsId);
-        List<CommentView> GetCommentList(int newsId, int userId);
-        void AddComment(int newsId, int userId, string commentText);
-        void AddReply(int newsId, int userId, int commentId, string commentText);
-        void EditComment(int commentId, int userId, string commentText);
-        void EditReply(int replyId, int userId, string replyText);
-        void DeleteComment(int commentId, int userId);
-        void DeleteReply(int replyId, int userId);
-        IEnumerable<int> popularNewsIdComment(int amount = 5);
+        ServiceResponse<List<CommentView>> GetCommentList(int newsId);
+        ServiceResponse<CommentView> AddComment(int newsId, int userId, string commentText);
+        ServiceResponse<CommentView> AddReply(int newsId, int userId, int commentId, string commentText);
+        ServiceResponse<CommentView> EditComment(int commentId, int userId, string commentText);
+        ServiceResponse<CommentView> EditReply(int replyId, int userId, string replyText);
+        ServiceResponse<CommentView> DeleteComment(int commentId, int userId);
+        ServiceResponse<CommentView> DeleteReply(int replyId, int userId);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewsAppNet.Models.DataModels;
+using NewsAppNet.Services;
 using NewsAppNet.Services.Interfaces;
 
 namespace NewsAppNet.Controllers
@@ -10,15 +11,12 @@ namespace NewsAppNet.Controllers
     public class UserController : ControllerBase
     {
         IUserService userService;
-        IAuthService authService;
 
         public UserController(
-            IUserService userService,
-            IAuthService authService
+            IUserService userService
             )
         {
             this.userService = userService;
-            this.authService = authService;
         }
 
         public int GetUserId()
@@ -31,28 +29,55 @@ namespace NewsAppNet.Controllers
             return userId;
         }
 
+        // Login using username and password
         [HttpPost("login")]
-        public ActionResult<UserAuthData> Login([FromForm] User user)
+        public ActionResult<UserAuthData> Login([FromForm] string username, [FromForm] string password)
         {
-            return userService.Login(user);
+            ServiceResponse<UserAuthData> serviceResponse = userService.Login(username, password);
+            
+            if (!serviceResponse.Success)
+            {
+                return BadRequest(serviceResponse.Message);
+            }
+            else
+            {
+                return Ok(serviceResponse.Data);
+            }
         }
 
         [HttpPost("register")]
         public ActionResult<UserAuthData> Register([FromForm] User user)
         {
-            return userService.Register(user);
+            ServiceResponse<UserAuthData> serviceResponse = userService.Register(user);
+
+            if (!serviceResponse.Success)
+            {
+                return BadRequest(serviceResponse.Message);
+            }
+            else
+            {
+                return Ok(serviceResponse.Data);
+            }
         }
 
+        // Checks if login token is still valid.
+        // If so, returns new token with extended lifespan.
+        // Authorize attribute ensures that only valid tokens are allowed through.
         [Authorize]
         [HttpPost("status")]
         public ActionResult<UserAuthData> LoginCheck()
         {
-            var id = GetUserId();
-            var user = userService.GetUser(id);
-            var userAuth = authService.GetUserAuthData(user);
+            var userId = GetUserId();
+            ServiceResponse<UserAuthData> serviceResponse = userService.LoginToken(userId);
 
-            return userAuth;
-            //return new JsonResult("User is logged in");
+            if (!serviceResponse.Success)
+            {
+                return BadRequest(serviceResponse.Message);
+            }
+            else
+            {
+                return Ok(serviceResponse.Data);
+            }
         }
     }
 }

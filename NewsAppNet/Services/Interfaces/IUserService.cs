@@ -5,11 +5,16 @@ namespace NewsAppNet.Services.Interfaces
 {
     public interface IUserService
     {
-        bool VerifyInput(User user);
         string HashPassword(string password);
         bool VerifyPassword(string actualPassword, string hashedPassword);
-        ActionResult<UserAuthData> Login(User user);
-        ActionResult<UserAuthData> Register(User user);
-        User GetUser(int id);
+        bool VerifyPasswordLogin(User loginUser);
+        ServiceResponse<UserAuthData> Login(string username, string password);
+        ServiceResponse<UserAuthData> LoginToken(int userId);
+        ServiceResponse<UserAuthData> Register(User user);
+        User? GetUser(int userId);
+        User? GetUser(string username);
+        UserAuthData GetUserAuthData(User user);
+        UserAuthData GetUserAuthData(int userId);
+        void AddUser(User user);
     }
 }

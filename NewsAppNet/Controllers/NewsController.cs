@@ -4,6 +4,7 @@ using NewsAppNet.Data.NewsFeeds.Feeds;
 using NewsAppNet.Data.Repositories.Interfaces;
 using NewsAppNet.Models.DataModels;
 using NewsAppNet.Models.ViewModels;
+using NewsAppNet.Services;
 using NewsAppNet.Services.Interfaces;
 
 namespace NewsAppNet.Controllers
@@ -38,78 +39,132 @@ namespace NewsAppNet.Controllers
         }
 
         [HttpGet]
-        public ActionResult Get()
+        public ActionResult<List<NewsItemView>> GetNews()
         {
-            return new JsonResult(newsService.GetNews());
+            ServiceResponse<List<NewsItemView>> serviceResponse = newsService.GetNewsAll();
+
+            if (!serviceResponse.Success)
+            {
+                return BadRequest(serviceResponse.Message);
+            }
+            else
+            {
+                return Ok(serviceResponse.Data);
+            }
         }
 
+        // Returns news items based on search criteria
         [HttpPost("search")]
-        public ActionResult GetNewsSearch([FromForm] Search search)
+        public ActionResult<List<NewsItemView>> GetNewsSearch([FromForm] Search search)
         {
-            var viewList = newsService.GetNewsSearch(search);
-            return new JsonResult(viewList);
+            ServiceResponse<List<NewsItemView>> serviceResponse = newsService.GetNewsSearch(search);
+
+            if (!serviceResponse.Success)
+            {
+                return BadRequest(serviceResponse.Message);
+            }
+            else
+            {
+                return Ok(serviceResponse.Data);
+            }
         }
 
         [Authorize]
         [HttpGet("Add")]
-        public ActionResult AddNews()
+        public ActionResult<List<NewsItemView>> AddNews()
         {
             int userId = GetUserId();
-            return new JsonResult(newsService.AddNews(userId));
+            ServiceResponse<List<NewsItemView>> serviceResponse = newsService.AddNews(userId);
+
+            if (!serviceResponse.Success)
+            {
+                return BadRequest(serviceResponse.Message);
+            }
+            else
+            {
+                return Ok(serviceResponse.Data);
+            }
         }
 
         [Authorize]
         [HttpPost("delete")]
-        public void Delete([FromForm] int newsId)
+        public ActionResult<NewsItemView> Delete([FromForm] int newsId)
         {
             int userId = GetUserId();
-            newsService.DeleteNews(newsId, userId);
+            ServiceResponse<NewsItemView> serviceResponse = newsService.DeleteNews(newsId, userId);
+
+            if (!serviceResponse.Success)
+            {
+                return BadRequest(serviceResponse.Message);
+            }
+            else
+            {
+                return Ok(serviceResponse.Data);
+            }
         }
 
         [HttpPost("commentList")]
-        public ActionResult GetNewsCommentList([FromForm] int newsId)
+        public ActionResult<List<CommentView>> GetNewsCommentList([FromForm] int newsId)
         {
-            int userId = GetUserId();
-            var commentList = commentReplyService.GetCommentList(newsId, userId);
+            ServiceResponse<List<CommentView>> serviceResponse = commentReplyService.GetCommentList(newsId);
 
-            return new JsonResult(commentList);
+            if (!serviceResponse.Success)
+            {
+                return BadRequest(serviceResponse.Message);
+            }
+            else
+            {
+                return Ok(serviceResponse.Data);
+            }
         }
 
         [Authorize]
         [HttpPost("favAddRemove")]
-        public ActionResult favAddRemove([FromForm] int newsId)
+        public ActionResult<string> favAddRemove([FromForm] int newsId)
         {
             int userId = GetUserId();
-            if (userId == -1)
-            {
-                return BadRequest(new { Login = "User not logged in" });
-            }
+            ServiceResponse<string> serviceResponse = favoriteService.AddRemoveFavorite(newsId, userId);
 
-            favoriteService.AddRemoveFavorite(newsId, userId);
-            return favUserFavorites();
-            //return Ok();
+            if (!serviceResponse.Success)
+            {
+                return BadRequest(serviceResponse.Message);
+            }
+            else
+            {
+                return Ok(serviceResponse.Data);
+            }
         }
 
         [Authorize]
         [HttpGet("userFav")]
-        public ActionResult favUserFavorites()
+        public ActionResult<List<FavoriteView>> favUserFavorites()
         {
             int userId = GetUserId();
-            if (userId == -1)
+            ServiceResponse<List<FavoriteView>> serviceResponse = favoriteService.GetUserFavorites(userId);
+
+            if (!serviceResponse.Success)
             {
-                return BadRequest(new { Login = "User not logged in" });
+                return BadRequest(serviceResponse.Message);
             }
-
-            var favList = favoriteService.GetUserFavorites(userId);
-
-            return new JsonResult(favList);
+            else
+            {
+                return Ok(serviceResponse.Data);
+            }
         }
 
         [HttpGet("popularComments")]
-        public ActionResult GetPopularNews()
+        public ActionResult<Dictionary<string, List<NewsItemView>>> GetPopularNews()
         {
-            var popularNews = newsService.GetPopularNews();
-            return new JsonResult(popularNews);
+            ServiceResponse<Dictionary<string, List<NewsItemView>>> serviceResponse = newsService.GetPopularNews();
+
+            if (!serviceResponse.Success)
+            {
+                return BadRequest(serviceResponse.Message);
+            }
+            else
+            {
+                return Ok(serviceResponse.Data);
+            }
         }
     }
 }
