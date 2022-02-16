@@ -13,6 +13,12 @@ namespace NewsAppNet.Data.Repositories
             return news != null;
         }
 
+        public bool NewsItemExists(int newsId)
+        {
+            var news = GetSingle(newsId);
+            return news != null;
+        }
+
         public IEnumerable<NewsItem> GetManyOrdered(IEnumerable<int> ids)
         {
             var newsItems = new List<NewsItem>();
