@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewsAppNet.Models.DataModels;
-using NewsAppNet.Services;
 using NewsAppNet.Services.Interfaces;
 
 namespace NewsAppNet.Controllers

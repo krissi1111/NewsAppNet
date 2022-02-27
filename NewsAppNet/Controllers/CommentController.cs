@@ -3,7 +3,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using NewsAppNet.Models.ViewModels;
-using NewsAppNet.Services;
+using NewsAppNet.Models.DataModels;
 
 namespace NewsAppNet.Controllers
 {

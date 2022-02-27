@@ -4,7 +4,6 @@ using NewsAppNet.Data.NewsFeeds.Feeds;
 using NewsAppNet.Data.Repositories.Interfaces;
 using NewsAppNet.Models.DataModels;
 using NewsAppNet.Models.ViewModels;
-using NewsAppNet.Services;
 using NewsAppNet.Services.Interfaces;
 
 namespace NewsAppNet.Controllers
