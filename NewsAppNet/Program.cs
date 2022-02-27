@@ -44,13 +44,6 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICommentReplyService, CommentReplyService>();
 builder.Services.AddScoped<IFavoriteService, FavoriteService>();
 
-builder.Services.AddSingleton<IAuthService>(
-    new AuthService(
-        configuration.GetValue<string>("JWTSecretKey"),
-        configuration.GetValue<int>("JWTLifespan")
-        )
-    );
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: "MyAllowAllOrigins",
