@@ -105,7 +105,8 @@ namespace NewsAppNet.Controllers
         [HttpPost("commentList")]
         public ActionResult<List<CommentView>> GetNewsCommentList([FromForm] int newsId)
         {
-            ServiceResponse<List<CommentView>> serviceResponse = commentReplyService.GetCommentList(newsId);
+            int userId = GetUserId();
+            ServiceResponse<List<CommentView>> serviceResponse = commentReplyService.GetCommentList(newsId, userId);
 
             if (!serviceResponse.Success)
             {
@@ -119,7 +120,7 @@ namespace NewsAppNet.Controllers
 
         [Authorize]
         [HttpPost("favAddRemove")]
-        public ActionResult<string> favAddRemove([FromForm] int newsId)
+        public ActionResult<string> FavAddRemove([FromForm] int newsId)
         {
             int userId = GetUserId();
             ServiceResponse<string> serviceResponse = favoriteService.AddRemoveFavorite(newsId, userId);
@@ -136,7 +137,7 @@ namespace NewsAppNet.Controllers
 
         [Authorize]
         [HttpGet("userFav")]
-        public ActionResult<List<FavoriteView>> favUserFavorites()
+        public ActionResult<List<FavoriteView>> FavUserFavorites()
         {
             int userId = GetUserId();
             ServiceResponse<List<FavoriteView>> serviceResponse = favoriteService.GetUserFavorites(userId);
@@ -155,6 +156,23 @@ namespace NewsAppNet.Controllers
         public ActionResult<Dictionary<string, List<NewsItemView>>> GetPopularNews()
         {
             ServiceResponse<Dictionary<string, List<NewsItemView>>> serviceResponse = newsService.GetPopularNews();
+
+            if (!serviceResponse.Success)
+            {
+                return BadRequest(serviceResponse.Message);
+            }
+            else
+            {
+                return Ok(serviceResponse.Data);
+            }
+        }
+
+        [Authorize]
+        [HttpPost("restore")]
+        public ActionResult<NewsItemView> Restore(int newsId)
+        {
+            int userId = GetUserId();
+            ServiceResponse<NewsItemView> serviceResponse = newsService.RestoreNews(newsId, userId);
 
             if (!serviceResponse.Success)
             {

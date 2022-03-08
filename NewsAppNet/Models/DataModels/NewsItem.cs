@@ -30,5 +30,6 @@ namespace NewsAppNet.Models.DataModels
         public IList<Comment>? Comments { get; set; }
         public IList<Reply>? Replies { get; set; }
         public IList<Favorite>? Favorites { get; set; }
+        public bool IsDeleted { get; set; } = false;
     }
 }

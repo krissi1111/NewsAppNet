@@ -103,7 +103,7 @@ namespace NewsAppNet.Services
         {
             Favorite fav = favoriteRepository.GetSingle(f => f.NewsItemId == newsId && f.UserId == userId);
             
-            favoriteRepository.Delete(fav);
+            favoriteRepository.Delete(fav, true);
             favoriteRepository.Commit();
         }
     }

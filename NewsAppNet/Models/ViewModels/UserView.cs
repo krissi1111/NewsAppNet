@@ -10,6 +10,7 @@ namespace NewsAppNet.Models.ViewModels
         public string LastName { get; set; }
         public string FullName { get; set; }
         public string UserType { get; set; }
+        public bool IsDeleted { get; set; }
 
         public UserView(User user)
         {
@@ -19,6 +20,7 @@ namespace NewsAppNet.Models.ViewModels
             LastName = user.LastName;
             FullName = string.Format("{0} {1}", user.FirstName, user.LastName);
             UserType = user.UserType;
+            IsDeleted = user.IsDeleted;
         }
     }
 }

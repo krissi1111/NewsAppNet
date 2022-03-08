@@ -38,6 +38,12 @@ namespace NewsAppNet.Services
                 response.Message = "Incorrect username or password";
                 return response;
             }
+            else if (user.IsDeleted)
+            {
+                response.Success = false;
+                response.Message = "User account disabled";
+                return response;
+            }
 
             bool correctPassword = VerifyPassword(password, user.Password);
             if (!correctPassword)
@@ -59,18 +65,24 @@ namespace NewsAppNet.Services
             ServiceResponse<UserAuthData> response = new();
 
             var user = GetUser(userId);
-            if(user == null)
+            if (user == null)
             {
                 response.Success = false;
                 response.Message = "User not found";
+                return response;
+            }
+            else if (user.IsDeleted)
+            {
+                response.Success = false;
+                response.Message = "User account disabled";
+                return response;
             }
             else
             {
                 response.Success = true;
                 response.Data= GetUserAuthData(user);
+                return response;
             }
-
-            return response;
         }
 
         public ServiceResponse<UserAuthData> Register(User user)
@@ -185,6 +197,109 @@ namespace NewsAppNet.Services
             
             userRepository.Add(newUser);
             userRepository.Commit();
+        }
+
+        // Used for deleting users.
+        // Parameters are:
+        //      UserDeleteId:   id of user that is to be deleted
+        //      UserRequestId:  id of user calling the method
+        // Only admins are allowed this action
+        public ServiceResponse<UserView> DeleteUser(int userDeleteId, int userRequestId)
+        {
+            ServiceResponse<UserView> response = new();
+
+            var requestUser = GetUser(userRequestId);
+            if (requestUser == null)
+            {
+                response.Success = false;
+                response.Message = "This action is only for admins";
+                return response;
+            }
+            else if (requestUser.UserType != "Admin")
+            {
+                response.Success = false;
+                response.Message = "This action is only for admins";
+                return response;
+            }
+
+            var subjectUser = GetUser(userDeleteId);
+            if (subjectUser == null)
+            {
+                response.Success = false;
+                response.Message = string.Format("User {0} not found", userDeleteId);
+                return response;
+            }
+            else if (subjectUser.UserType == "Admin")
+            {
+                response.Success = false;
+                response.Message = "Admin users cannot be deleted";
+                return response;
+            }
+            else if (subjectUser.IsDeleted)
+            {
+                response.Success = false;
+                response.Message = string.Format("User {0} already soft deleted", userDeleteId);
+                return response;
+            }
+
+            var userView = new UserView(subjectUser);
+
+            userRepository.Delete(subjectUser);
+            userRepository.Commit();
+
+            response.Success = true;
+            response.Data = userView;
+
+            return response;
+        }
+
+        // Used for restoring soft deleted users.
+        // Parameters are:
+        //      UserRestoreId:  id of user that is to be restored
+        //      UserRequestId:  id of user calling the method
+        // Only admins are allowed this action
+        public ServiceResponse<UserView> RestoreUser(int userRestoreId, int userRequestId)
+        {
+            ServiceResponse<UserView> response = new();
+
+            var requestUser = GetUser(userRequestId);
+            if (requestUser == null)
+            {
+                response.Success = false;
+                response.Message = "This action is only for admins";
+                return response;
+            }
+            else if (requestUser.UserType != "Admin")
+            {
+                response.Success = false;
+                response.Message = "This action is only for admins";
+                return response;
+            }
+
+            var subjectUser = GetUser(userRestoreId);
+            if (subjectUser == null)
+            {
+                response.Success = false;
+                response.Message = string.Format("User {0} not found", userRestoreId);
+                return response;
+            }
+            else if (!subjectUser.IsDeleted)
+            {
+                response.Success = false;
+                response.Message = string.Format("User {0} is not soft deleted", userRestoreId);
+                return response;
+            }
+
+            subjectUser.IsDeleted = false;
+            userRepository.Update(subjectUser);
+            userRepository.Commit();
+
+            var userView = new UserView(subjectUser);
+
+            response.Success = true;
+            response.Data = userView;
+
+            return response;
         }
     }
 }

@@ -53,10 +53,21 @@ namespace NewsAppNet.Data.Repositories
             EntityEntry dbEntityEntry = _context.Entry(entity);
             dbEntityEntry.State = EntityState.Modified;
         }
-        public virtual void Delete(T entity)
+
+        // Deletes entity from database if hardDelete is true,
+        // otherwise sets IsDeleted variable to true
+        public virtual void Delete(T entity, bool hardDelete = false)
         {
-            EntityEntry dbEntityEntry = _context.Entry(entity);
-            dbEntityEntry.State = EntityState.Deleted;
+            if (!hardDelete)
+            {
+                entity.IsDeleted = true;
+                Update(entity);
+            }
+            else
+            {
+                EntityEntry dbEntityEntry = _context.Entry(entity);
+                dbEntityEntry.State = EntityState.Deleted;
+            }
         }
         public virtual void Commit()
         {

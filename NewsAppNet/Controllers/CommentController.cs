@@ -141,5 +141,39 @@ namespace NewsAppNet.Controllers
                 return Ok(serviceResponse.Data);
             }
         }
+
+        [Authorize]
+        [HttpPost("restoreComment")]
+        public ActionResult<CommentView> RestoreComment([FromForm] int commentId)
+        {
+            int userId = GetUserId();
+            ServiceResponse<CommentView> serviceResponse = commentReplyService.RestoreComment(commentId, userId);
+
+            if (!serviceResponse.Success)
+            {
+                return BadRequest(serviceResponse.Message);
+            }
+            else
+            {
+                return Ok(serviceResponse.Data);
+            }
+        }
+
+        [Authorize]
+        [HttpPost("restoreReply")]
+        public ActionResult<CommentView> RestoreReply([FromForm] int replyId)
+        {
+            int userId = GetUserId();
+            ServiceResponse<CommentView> serviceResponse = commentReplyService.RestoreReply(replyId, userId);
+
+            if (!serviceResponse.Success)
+            {
+                return BadRequest(serviceResponse.Message);
+            }
+            else
+            {
+                return Ok(serviceResponse.Data);
+            }
+        }
     }
 }

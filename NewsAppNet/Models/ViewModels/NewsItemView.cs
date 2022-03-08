@@ -11,6 +11,7 @@ namespace NewsAppNet.Models.ViewModels
         public string Link { get; set; } = string.Empty;
         public string Image { get; set; } = string.Empty;
         public DateTime Date { get; set; }
+        public bool IsDeleted { get; set; }
 
         public NewsItemView(NewsItem newsItem)
         {
@@ -21,6 +22,7 @@ namespace NewsAppNet.Models.ViewModels
             Link = newsItem.Link;
             Image = newsItem.Image;
             Date = newsItem.Date;
+            IsDeleted = newsItem.IsDeleted;
         }
     }
 }

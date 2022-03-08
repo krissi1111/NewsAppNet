@@ -40,9 +40,17 @@ namespace NewsAppNet.Services
 
         // Returns all comments and replies for given news item.
         // Replies are grouped under parent comment.
-        public ServiceResponse<List<CommentView>> GetCommentList(int newsId)
+        public ServiceResponse<List<CommentView>> GetCommentList(int newsId, int userId)
         {
             ServiceResponse<List<CommentView>> response = new();
+
+            var user = userService.GetUser(userId);
+            var isAdmin = false;
+
+            if (user != null)
+            {
+                if (user.UserType == "Admin") isAdmin = true;
+            }
 
             if (!newsItemRepository.NewsItemExists(newsId))
             {
@@ -65,25 +73,85 @@ namespace NewsAppNet.Services
                 {
                     if (reply.CommentId != comment.Id) continue;
                     var replyView = new CommentView(reply);
+
                     var userR = userService.GetUser(reply.UserId);
-                    string fullNameR = "(Deleted)";
-                    if (userR != null)
+
+                    // Checks if reply soft deleted
+                    if (reply.IsDeleted)
                     {
-                        fullNameR = string.Format("{0} {1}", userR.FirstName, userR.LastName);
+                        // An admin will be able to see replies 
+                        // even if soft deleted
+                        if (!isAdmin)
+                        {
+                            // Regular users will not be able to see soft deleted replies.
+                            // Instead they will just see "(Reply deleted)" as user name
+                            // and no comment text.
+                            string replyDeleted = "(Reply deleted)";
+                            replyView.UserFullName = replyDeleted;
+                            replyView.Text = string.Empty;
+                        }
+                        else
+                        {
+                            string fullName = "(User deleted)";
+                            if (userR != null)
+                            {
+                                if (!userR.IsDeleted) fullName = string.Format("{0} {1}", userR.FirstName, userR.LastName);
+                            }
+                            replyView.UserFullName = fullName;
+                        }
                     }
-                    replyView.UserFullName = fullNameR;
+                    else
+                    {
+                        string fullNameR = "(User deleted)";
+                        if (userR != null)
+                        {
+                            if (!userR.IsDeleted) fullNameR = string.Format("{0} {1}", userR.FirstName, userR.LastName);
+                        }
+                        replyView.UserFullName = fullNameR;
+                    }
+
                     replyViews.Add(replyView);
                 }
                 
                 var commentView = new CommentView(comment);
-                var user = userService.GetUser(comment.UserId);
-                string fullName = "(Deleted)";
-                if (user != null)
+
+                var userC = userService.GetUser(comment.UserId);
+
+                // Checks if comment soft deleted
+                if (comment.IsDeleted)
                 {
-                    fullName = string.Format("{0} {1}", user.FirstName, user.LastName);
+                    // An admin will be able to see comments 
+                    // even if soft deleted
+                    if (!isAdmin)
+                    {
+                        // Regular users will not be able to see soft deleted comments.
+                        // Instead they will just see "(Comment deleted)" as user name
+                        // and no comment text.
+                        string commentDeleted = "(Comment deleted)";
+                        commentView.UserFullName = commentDeleted;
+                        commentView.Text = string.Empty;
+                    }
+                    else
+                    {
+                        string fullName = "(User deleted)";
+                        if (userC != null)
+                        {
+                            if (!userC.IsDeleted) fullName = string.Format("{0} {1}", userC.FirstName, userC.LastName);
+                        }
+                        commentView.UserFullName = fullName;
+                    }
                 }
-                commentView.UserFullName = fullName;
+                else
+                {
+                    string fullName = "(User deleted)";
+                    if (userC != null)
+                    {
+                        if(!userC.IsDeleted) fullName = string.Format("{0} {1}", userC.FirstName, userC.LastName);
+                    }
+                    commentView.UserFullName = fullName;
+                }
                 commentView.Replies = replyViews;
+
                 commentViews.Add(commentView);
             }
 
@@ -291,6 +359,7 @@ namespace NewsAppNet.Services
                 return response;
             }
 
+            /*
             // Need to manually delete replies associated with this comment
             // because of foreign key relationships
             var replies = GetReplies(comment.NewsItemId).ToList();
@@ -307,8 +376,10 @@ namespace NewsAppNet.Services
             }
             replyRepository.Commit();
 
+            */
+
             var commentView = new CommentView(comment);
-            commentView.Replies = replyViews;
+            //commentView.Replies = replyViews;
             response.Data = commentView;
 
             commentRepository.Delete(comment);
@@ -356,6 +427,96 @@ namespace NewsAppNet.Services
             replyRepository.Commit();
 
             response.Success = true;
+
+            return response;
+        }
+
+        // Used for restoring soft deleted comments
+        public ServiceResponse<CommentView> RestoreComment(int commentId, int userId)
+        {
+            ServiceResponse<CommentView> response = new();
+
+            var comment = commentRepository.GetSingle(commentId);
+            if (comment == null)
+            {
+                response.Success = false;
+                response.Message = string.Format("Comment {0} not found", commentId);
+                return response;
+            }
+            else if (!comment.IsDeleted)
+            {
+                response.Success = false;
+                response.Message = string.Format("Comment {0} is not soft deleted", commentId);
+                return response;
+            }
+
+            var currentUser = userService.GetUser(userId);
+            if (currentUser == null)
+            {
+                response.Success = false;
+                response.Message = "This action is only for admins";
+                return response;
+            }
+            else if (currentUser.UserType != "Admin")
+            {
+                response.Success = false;
+                response.Message = "This action is only for admins";
+                return response;
+            }
+
+            comment.IsDeleted = false;
+            commentRepository.Update(comment);
+            commentRepository.Commit();
+
+            var commentView = new CommentView(comment);
+
+            response.Success = true;
+            response.Data = commentView;
+
+            return response;
+        }
+
+        // Used for restoring soft deleted replies
+        public ServiceResponse<CommentView> RestoreReply(int replyId, int userId)
+        {
+            ServiceResponse<CommentView> response = new();
+
+            var reply = replyRepository.GetSingle(replyId);
+            if (reply == null)
+            {
+                response.Success = false;
+                response.Message = string.Format("Comment {0} not found", replyId);
+                return response;
+            }
+            else if (!reply.IsDeleted)
+            {
+                response.Success = false;
+                response.Message = string.Format("Comment {0} is not soft deleted", replyId);
+                return response;
+            }
+
+            var currentUser = userService.GetUser(userId);
+            if (currentUser == null)
+            {
+                response.Success = false;
+                response.Message = "This action is only for admins";
+                return response;
+            }
+            else if (currentUser.UserType != "Admin")
+            {
+                response.Success = false;
+                response.Message = "This action is only for admins";
+                return response;
+            }
+
+            reply.IsDeleted = false;
+            replyRepository.Update(reply);
+            replyRepository.Commit();
+
+            var replyView = new CommentView(reply);
+
+            response.Success = true;
+            response.Data = replyView;
 
             return response;
         }

@@ -9,5 +9,6 @@ namespace NewsAppNet.Models.DataModels
         public User? User { get; set; }
         public int NewsItemId { get; set; }
         public NewsItem? NewsItem { get; set; }
+        public bool IsDeleted { get; set; } = false;
     }
 }
