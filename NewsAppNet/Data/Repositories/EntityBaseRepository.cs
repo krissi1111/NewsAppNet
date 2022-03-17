@@ -12,7 +12,7 @@ namespace NewsAppNet.Data.Repositories
     public class EntityBaseRepository<T> : IEntityBaseRepository<T>
         where T : class, IEntityBase, new()
     {
-        private DbContext _context;
+        private readonly DbContext _context;
 
         public EntityBaseRepository(DbContext context)
         {

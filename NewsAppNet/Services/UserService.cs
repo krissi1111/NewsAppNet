@@ -12,7 +12,7 @@ namespace NewsAppNet.Services
 {
     public class UserService : IUserService
     {
-        IUserRepository userRepository;
+        readonly IUserRepository userRepository;
 
         readonly string jwtSecret;
         readonly int jwtLifespan;
