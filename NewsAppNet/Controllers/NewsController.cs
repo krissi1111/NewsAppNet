@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NewsAppNet.Data.NewsFeeds.Feeds;
-using NewsAppNet.Data.Repositories.Interfaces;
 using NewsAppNet.Models.DataModels;
+using NewsAppNet.Models.DataModels.Interfaces;
 using NewsAppNet.Models.ViewModels;
 using NewsAppNet.Services.Interfaces;
 
@@ -12,17 +11,20 @@ namespace NewsAppNet.Controllers
     [Route("[controller]")]
     public class NewsController : ControllerBase
     {
-        INewsService newsService;
-        ICommentReplyService commentReplyService;
-        IFavoriteService favoriteService;
+        readonly INewsService newsService;
+        readonly INewsFeedService newsFeedService;
+        readonly ICommentReplyService commentReplyService;
+        readonly IFavoriteService favoriteService;
 
         public NewsController(
             INewsService newsService,
+            INewsFeedService newsFeedService,
             ICommentReplyService commentReplyService,
             IFavoriteService favoriteService
             ) 
         { 
             this.newsService = newsService;
+            this.newsFeedService = newsFeedService;
             this.commentReplyService = commentReplyService;
             this.favoriteService = favoriteService;
         }
@@ -37,19 +39,24 @@ namespace NewsAppNet.Controllers
             return userId;
         }
 
+        private ActionResult HandleResponse(IResponse serviceResponse)
+        {
+            if (!serviceResponse.Success)
+            {
+                return BadRequest(serviceResponse);
+            }
+            else
+            {
+                return Ok(serviceResponse);
+            }
+        }
+
         [HttpGet]
         public ActionResult<List<NewsItemView>> GetNews()
         {
             ServiceResponse<List<NewsItemView>> serviceResponse = newsService.GetNewsAll();
 
-            if (!serviceResponse.Success)
-            {
-                return BadRequest(serviceResponse.Message);
-            }
-            else
-            {
-                return Ok(serviceResponse.Data);
-            }
+            return HandleResponse(serviceResponse);
         }
 
         // Returns news items based on search criteria
@@ -58,14 +65,15 @@ namespace NewsAppNet.Controllers
         {
             ServiceResponse<List<NewsItemView>> serviceResponse = newsService.GetNewsSearch(search);
 
-            if (!serviceResponse.Success)
-            {
-                return BadRequest(serviceResponse.Message);
-            }
-            else
-            {
-                return Ok(serviceResponse.Data);
-            }
+            return HandleResponse(serviceResponse);
+        }
+
+        [HttpPost("feeds")]
+        public ActionResult<List<NewsFeedView>> GetNewsFeeds([FromForm] int[]? newsFeedIds)
+        {
+            ServiceResponse<List<NewsFeedView>> serviceResponse = newsFeedService.GetFeeds(newsFeedIds);
+
+            return HandleResponse(serviceResponse);
         }
 
         [Authorize]
@@ -75,14 +83,7 @@ namespace NewsAppNet.Controllers
             int userId = GetUserId();
             ServiceResponse<List<NewsItemView>> serviceResponse = newsService.AddNews(userId);
 
-            if (!serviceResponse.Success)
-            {
-                return BadRequest(serviceResponse.Message);
-            }
-            else
-            {
-                return Ok(serviceResponse.Data);
-            }
+            return HandleResponse(serviceResponse);
         }
 
         [Authorize]
@@ -92,14 +93,7 @@ namespace NewsAppNet.Controllers
             int userId = GetUserId();
             ServiceResponse<NewsItemView> serviceResponse = newsService.DeleteNews(newsId, userId);
 
-            if (!serviceResponse.Success)
-            {
-                return BadRequest(serviceResponse.Message);
-            }
-            else
-            {
-                return Ok(serviceResponse.Data);
-            }
+            return HandleResponse(serviceResponse);
         }
 
         [HttpPost("commentList")]
@@ -108,14 +102,7 @@ namespace NewsAppNet.Controllers
             int userId = GetUserId();
             ServiceResponse<List<CommentView>> serviceResponse = commentReplyService.GetCommentList(newsId, userId);
 
-            if (!serviceResponse.Success)
-            {
-                return BadRequest(serviceResponse.Message);
-            }
-            else
-            {
-                return Ok(serviceResponse.Data);
-            }
+            return HandleResponse(serviceResponse);
         }
 
         [Authorize]
@@ -125,14 +112,7 @@ namespace NewsAppNet.Controllers
             int userId = GetUserId();
             ServiceResponse<string> serviceResponse = favoriteService.AddRemoveFavorite(newsId, userId);
 
-            if (!serviceResponse.Success)
-            {
-                return BadRequest(serviceResponse.Message);
-            }
-            else
-            {
-                return Ok(serviceResponse.Data);
-            }
+            return HandleResponse(serviceResponse);
         }
 
         [Authorize]
@@ -141,15 +121,8 @@ namespace NewsAppNet.Controllers
         {
             int userId = GetUserId();
             ServiceResponse<List<FavoriteView>> serviceResponse = favoriteService.GetUserFavorites(userId);
-
-            if (!serviceResponse.Success)
-            {
-                return BadRequest(serviceResponse.Message);
-            }
-            else
-            {
-                return Ok(serviceResponse.Data);
-            }
+            
+            return HandleResponse(serviceResponse);
         }
 
         [HttpGet("popularComments")]
@@ -157,14 +130,7 @@ namespace NewsAppNet.Controllers
         {
             ServiceResponse<Dictionary<string, List<NewsItemView>>> serviceResponse = newsService.GetPopularNews();
 
-            if (!serviceResponse.Success)
-            {
-                return BadRequest(serviceResponse.Message);
-            }
-            else
-            {
-                return Ok(serviceResponse.Data);
-            }
+            return HandleResponse(serviceResponse);
         }
 
         [Authorize]
@@ -174,14 +140,7 @@ namespace NewsAppNet.Controllers
             int userId = GetUserId();
             ServiceResponse<NewsItemView> serviceResponse = newsService.RestoreNews(newsId, userId);
 
-            if (!serviceResponse.Success)
-            {
-                return BadRequest(serviceResponse.Message);
-            }
-            else
-            {
-                return Ok(serviceResponse.Data);
-            }
+            return HandleResponse(serviceResponse);
         }
     }
 }
