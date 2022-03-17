@@ -5,26 +5,25 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace NewsAppNet.Migrations
 {
-    public partial class mainMigraton : Migration
+    public partial class mainMigration3 : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "NewsItems",
+                name: "NewsFeeds",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Origin = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Summary = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Link = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Image = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Date = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    FeedName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FeedUrl = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ImageDefault = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsConcrete = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_NewsItems", x => x.Id);
+                    table.PrimaryKey("PK_NewsFeeds", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -37,11 +36,37 @@ namespace NewsAppNet.Migrations
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UserType = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    UserType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "NewsItems",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    NewsFeedId = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Summary = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Link = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Image = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_NewsItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_NewsItems_NewsFeeds_NewsFeedId",
+                        column: x => x.NewsFeedId,
+                        principalTable: "NewsFeeds",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -53,7 +78,8 @@ namespace NewsAppNet.Migrations
                     NewsItemId = table.Column<int>(type: "int", nullable: false),
                     UserId = table.Column<int>(type: "int", nullable: false),
                     Text = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Date = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -78,7 +104,8 @@ namespace NewsAppNet.Migrations
                 {
                     UserId = table.Column<int>(type: "int", nullable: false),
                     NewsItemId = table.Column<int>(type: "int", nullable: false),
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -108,6 +135,7 @@ namespace NewsAppNet.Migrations
                     CommentId = table.Column<int>(type: "int", nullable: false),
                     Text = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     ReplyId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
@@ -154,6 +182,17 @@ namespace NewsAppNet.Migrations
                 column: "NewsItemId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_NewsFeeds_FeedUrl",
+                table: "NewsFeeds",
+                column: "FeedUrl",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NewsItems_NewsFeedId",
+                table: "NewsItems",
+                column: "NewsFeedId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Replies_CommentId",
                 table: "Replies",
                 column: "CommentId");
@@ -190,6 +229,9 @@ namespace NewsAppNet.Migrations
 
             migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "NewsFeeds");
         }
     }
 }

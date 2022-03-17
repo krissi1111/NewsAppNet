@@ -5,7 +5,7 @@ namespace NewsAppNet.Models.ViewModels
     public class NewsItemView
     {
         public int Id { get; set; }
-        public string Origin { get; set; } = string.Empty;
+        public int NewsFeedId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Summary { get; set; } = string.Empty;
         public string Link { get; set; } = string.Empty;
@@ -16,7 +16,7 @@ namespace NewsAppNet.Models.ViewModels
         public NewsItemView(NewsItem newsItem)
         {
             Id = newsItem.Id;
-            Origin = newsItem.Origin;
+            NewsFeedId = newsItem.NewsFeedId;
             Title = newsItem.Title;
             Summary = newsItem.Summary;
             Link = newsItem.Link;

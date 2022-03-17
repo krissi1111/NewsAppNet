@@ -33,6 +33,9 @@ namespace NewsAppNet.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<int>("NewsItemId")
                         .HasColumnType("int");
 
@@ -63,11 +66,48 @@ namespace NewsAppNet.Migrations
                     b.Property<int>("Id")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.HasKey("UserId", "NewsItemId");
 
                     b.HasIndex("NewsItemId");
 
                     b.ToTable("Favorites");
+                });
+
+            modelBuilder.Entity("NewsAppNet.Models.DataModels.NewsFeedModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("FeedName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FeedUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ImageDefault")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsConcrete")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FeedUrl")
+                        .IsUnique();
+
+                    b.ToTable("NewsFeeds", (string)null);
                 });
 
             modelBuilder.Entity("NewsAppNet.Models.DataModels.NewsItem", b =>
@@ -85,13 +125,15 @@ namespace NewsAppNet.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Link")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Origin")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("NewsFeedId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Summary")
                         .IsRequired()
@@ -102,6 +144,8 @@ namespace NewsAppNet.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("NewsFeedId");
 
                     b.ToTable("NewsItems", (string)null);
                 });
@@ -119,6 +163,9 @@ namespace NewsAppNet.Migrations
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<int>("NewsItemId")
                         .HasColumnType("int");
@@ -157,6 +204,9 @@ namespace NewsAppNet.Migrations
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -217,6 +267,17 @@ namespace NewsAppNet.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("NewsAppNet.Models.DataModels.NewsItem", b =>
+                {
+                    b.HasOne("NewsAppNet.Models.DataModels.NewsFeedModel", "NewsFeedModel")
+                        .WithMany("NewsItems")
+                        .HasForeignKey("NewsFeedId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("NewsFeedModel");
+                });
+
             modelBuilder.Entity("NewsAppNet.Models.DataModels.Reply", b =>
                 {
                     b.HasOne("NewsAppNet.Models.DataModels.Comment", "Comment")
@@ -251,6 +312,11 @@ namespace NewsAppNet.Migrations
             modelBuilder.Entity("NewsAppNet.Models.DataModels.Comment", b =>
                 {
                     b.Navigation("Replies");
+                });
+
+            modelBuilder.Entity("NewsAppNet.Models.DataModels.NewsFeedModel", b =>
+                {
+                    b.Navigation("NewsItems");
                 });
 
             modelBuilder.Entity("NewsAppNet.Models.DataModels.NewsItem", b =>

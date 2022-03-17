@@ -43,6 +43,8 @@ builder.Services.AddScoped<INewsService, NewsService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICommentReplyService, CommentReplyService>();
 builder.Services.AddScoped<IFavoriteService, FavoriteService>();
+builder.Services.AddScoped<INewsFeedService, NewsFeedService>();
+builder.Services.AddScoped<INewsFeedRepository, NewsFeedRepository>();
 
 builder.Services.AddCors(options =>
 {
