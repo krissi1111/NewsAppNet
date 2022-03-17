@@ -3,7 +3,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using NewsAppNet.Models.ViewModels;
-using NewsAppNet.Services;
+using NewsAppNet.Models.DataModels;
+using NewsAppNet.Models.DataModels.Interfaces;
 
 namespace NewsAppNet.Controllers
 {
@@ -11,7 +12,7 @@ namespace NewsAppNet.Controllers
     [Route("[controller]")]
     public class CommentController : ControllerBase
     {
-        ICommentReplyService commentReplyService;
+        readonly ICommentReplyService commentReplyService;
 
         public CommentController(
             ICommentReplyService commentReplyService
@@ -30,6 +31,18 @@ namespace NewsAppNet.Controllers
             return userId;
         }
 
+        private ActionResult HandleResponse(IResponse serviceResponse)
+        {
+            if (!serviceResponse.Success)
+            {
+                return BadRequest(serviceResponse);
+            }
+            else
+            {
+                return Ok(serviceResponse);
+            }
+        }
+
         // Adds a new comment
         [Authorize]
         [HttpPost("addComment")]
@@ -38,14 +51,7 @@ namespace NewsAppNet.Controllers
             int userId = GetUserId();
             ServiceResponse<CommentView> serviceResponse = commentReplyService.AddComment(newsId, userId, commentText);
 
-            if (!serviceResponse.Success)
-            {
-                return BadRequest(serviceResponse.Message);
-            }
-            else
-            {
-                return Ok(serviceResponse.Data);
-            }
+            return HandleResponse(serviceResponse);
         }
 
         // Adds a new reply
@@ -56,14 +62,7 @@ namespace NewsAppNet.Controllers
             int userId = GetUserId();
             ServiceResponse<CommentView> serviceResponse = commentReplyService.AddReply(newsId, userId, commentId, replyText);
 
-            if (!serviceResponse.Success)
-            {
-                return BadRequest(serviceResponse.Message);
-            }
-            else
-            {
-                return Ok(serviceResponse.Data);
-            }
+            return HandleResponse(serviceResponse);
         }
 
         // Changes text of existing comment.
@@ -75,14 +74,7 @@ namespace NewsAppNet.Controllers
             int userId = GetUserId();
             ServiceResponse<CommentView> serviceResponse = commentReplyService.EditComment(commentId, userId, commentText);
 
-            if (!serviceResponse.Success)
-            {
-                return BadRequest(serviceResponse.Message);
-            }
-            else
-            {
-                return Ok(serviceResponse.Data);
-            }
+            return HandleResponse(serviceResponse);
         }
 
         // Changes text of existing reply.
@@ -94,14 +86,7 @@ namespace NewsAppNet.Controllers
             int userId = GetUserId();
             ServiceResponse<CommentView> serviceResponse = commentReplyService.EditReply(replyId, userId, replyText);
 
-            if (!serviceResponse.Success)
-            {
-                return BadRequest(serviceResponse.Message);
-            }
-            else
-            {
-                return Ok(serviceResponse.Data);
-            }
+            return HandleResponse(serviceResponse);
         }
 
         // Deletes existing comment.
@@ -113,14 +98,7 @@ namespace NewsAppNet.Controllers
             int userId = GetUserId();
             ServiceResponse<CommentView> serviceResponse = commentReplyService.DeleteComment(commentId, userId);
 
-            if (!serviceResponse.Success)
-            {
-                return BadRequest(serviceResponse.Message);
-            }
-            else
-            {
-                return Ok(serviceResponse.Data);
-            }
+            return HandleResponse(serviceResponse);
         }
 
         // Deletes existing reply.
@@ -132,14 +110,27 @@ namespace NewsAppNet.Controllers
             int userId = GetUserId();
             ServiceResponse<CommentView> serviceResponse = commentReplyService.DeleteReply(replyId, userId);
 
-            if (!serviceResponse.Success)
-            {
-                return BadRequest(serviceResponse.Message);
-            }
-            else
-            {
-                return Ok(serviceResponse.Data);
-            }
+            return HandleResponse(serviceResponse);
+        }
+
+        [Authorize]
+        [HttpPost("restoreComment")]
+        public ActionResult<CommentView> RestoreComment([FromForm] int commentId)
+        {
+            int userId = GetUserId();
+            ServiceResponse<CommentView> serviceResponse = commentReplyService.RestoreComment(commentId, userId);
+
+            return HandleResponse(serviceResponse);
+        }
+
+        [Authorize]
+        [HttpPost("restoreReply")]
+        public ActionResult<CommentView> RestoreReply([FromForm] int replyId)
+        {
+            int userId = GetUserId();
+            ServiceResponse<CommentView> serviceResponse = commentReplyService.RestoreReply(replyId, userId);
+
+            return HandleResponse(serviceResponse);
         }
     }
 }

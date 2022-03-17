@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NewsAppNet.Models.DataModels;
-using NewsAppNet.Services;
+using NewsAppNet.Models.DataModels.Interfaces;
 using NewsAppNet.Services.Interfaces;
 
 namespace NewsAppNet.Controllers
@@ -10,7 +10,7 @@ namespace NewsAppNet.Controllers
     [Route("[controller]")]
     public class UserController : ControllerBase
     {
-        IUserService userService;
+        readonly IUserService userService;
 
         public UserController(
             IUserService userService
@@ -29,20 +29,25 @@ namespace NewsAppNet.Controllers
             return userId;
         }
 
+        private ActionResult HandleResponse(IResponse serviceResponse)
+        {
+            if (!serviceResponse.Success)
+            {
+                return BadRequest(serviceResponse);
+            }
+            else
+            {
+                return Ok(serviceResponse);
+            }
+        }
+
         // Login using username and password
         [HttpPost("login")]
         public ActionResult<UserAuthData> Login([FromForm] string username, [FromForm] string password)
         {
             ServiceResponse<UserAuthData> serviceResponse = userService.Login(username, password);
-            
-            if (!serviceResponse.Success)
-            {
-                return BadRequest(serviceResponse.Message);
-            }
-            else
-            {
-                return Ok(serviceResponse.Data);
-            }
+
+            return HandleResponse(serviceResponse);
         }
 
         [HttpPost("register")]
@@ -50,14 +55,7 @@ namespace NewsAppNet.Controllers
         {
             ServiceResponse<UserAuthData> serviceResponse = userService.Register(user);
 
-            if (!serviceResponse.Success)
-            {
-                return BadRequest(serviceResponse.Message);
-            }
-            else
-            {
-                return Ok(serviceResponse.Data);
-            }
+            return HandleResponse(serviceResponse);
         }
 
         // Checks if login token is still valid.
@@ -70,14 +68,7 @@ namespace NewsAppNet.Controllers
             var userId = GetUserId();
             ServiceResponse<UserAuthData> serviceResponse = userService.LoginToken(userId);
 
-            if (!serviceResponse.Success)
-            {
-                return BadRequest(serviceResponse.Message);
-            }
-            else
-            {
-                return Ok(serviceResponse.Data);
-            }
+            return HandleResponse(serviceResponse);
         }
     }
 }

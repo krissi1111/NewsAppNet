@@ -9,7 +9,9 @@ namespace NewsAppNet.Models.DataModels
         public int Id { get; set; }
 
         [Required]
-        public string Origin { get; set; } = string.Empty;
+        public int NewsFeedId { get; set; }
+
+        public NewsFeedModel? NewsFeedModel { get; set; }
 
         [Required]
         public string Title { get; set; } = string.Empty;
@@ -27,8 +29,13 @@ namespace NewsAppNet.Models.DataModels
 
         [Required]
         public DateTime Date { get; set; }
+
         public IList<Comment>? Comments { get; set; }
+
         public IList<Reply>? Replies { get; set; }
+
         public IList<Favorite>? Favorites { get; set; }
+
+        public bool IsDeleted { get; set; } = false;
     }
 }

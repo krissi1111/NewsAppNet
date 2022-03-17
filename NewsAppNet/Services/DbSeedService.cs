@@ -1,15 +1,16 @@
 ﻿using CryptoHelper;
 using Microsoft.EntityFrameworkCore;
-using NewsAppNet.Data.NewsFeeds.Feeds;
-using NewsAppNet.Data.Repositories.Interfaces;
+using NewsAppNet.Data.NewsFeeds.ItemBuilder;
 using NewsAppNet.Models.DataModels;
 using NewsAppNet.Services.Interfaces;
+using System.ServiceModel.Syndication;
+using System.Xml;
 
 namespace NewsAppNet.Services
 {
     public class DbSeedService : IDbSeedService 
     {
-        DbContext _dbContext;
+        readonly DbContext _dbContext;
 
         public DbSeedService(DbContext dbContext) { 
             _dbContext = dbContext;
@@ -24,6 +25,7 @@ namespace NewsAppNet.Services
             // Seed if "admin" doesn't exist
             if (admin == null)
             {
+                SeedNewsFeeds();
                 SeedNewsItem();
                 SeedUser();
                 SeedComment();
@@ -32,12 +34,99 @@ namespace NewsAppNet.Services
             }
         }
 
+        void SeedNewsFeeds()
+        {
+            List<NewsFeedModel> feedList = new();
+
+            feedList.Add(new NewsFeedModel
+            {
+                FeedName = "Mbl",
+                FeedUrl = "https://www.mbl.is/feeds/helst/",
+                ImageDefault = "https://www.mbl.is/a/img/haus_new/mbl-dark.svg",
+                IsConcrete = true,
+            });
+            feedList.Add(new NewsFeedModel
+            {
+                FeedName = "Visir",
+                FeedUrl = "https://www.visir.is/rss/allt",
+                ImageDefault = "https://www.visir.is/static/1.0.553/img/visirhvitblar.png",
+                IsConcrete = true,
+            });
+            feedList.Add(new NewsFeedModel
+            {
+                FeedName = "Dv",
+                FeedUrl = "https://www.dv.is/feed/",
+                ImageDefault = "https://www.dv.is/wp-content/uploads/2018/09/DV.jpg",
+                IsConcrete = true,
+            });
+            feedList.Add(new NewsFeedModel
+            {
+                FeedName = "Ruv",
+                FeedUrl = "https://www.ruv.is/rss/frettir",
+                ImageDefault = "https://www.ruv.is/sites/all/themes/at_ruv/images/svg/ruv-logo-36.svg?v=1.3",
+                IsConcrete = true,
+            });
+            feedList.Add(new NewsFeedModel
+            {
+                FeedName = "CNN",
+                FeedUrl = "http://rss.cnn.com/rss/edition_world.rss",
+                ImageDefault = "https://logos-world.net/wp-content/uploads/2020/11/CNN-Logo.png",
+                IsConcrete = false,
+            });
+
+            foreach (var feed in feedList)
+            {
+                _dbContext.Set<NewsFeedModel>().Add(feed);
+            }
+
+            _dbContext.SaveChanges();
+        }
+
         // Adds news items from all news feeds
         void SeedNewsItem()
         {
+            // Check if news feeds have been seeded.
+            // If not call SeedNewsFeed method
+            var newsFeeds = _dbContext.Set<NewsFeedModel>().AsEnumerable();
+            if (newsFeeds == null) 
+            { 
+                SeedNewsFeeds();
+                newsFeeds = _dbContext.Set<NewsFeedModel>().AsEnumerable();
+            }
+
+            newsFeeds.ToList();
+
+            List<NewsItem> feedItemList = new();
+            foreach (var newsFeed in newsFeeds)
+            {
+                SyndicationFeed feed = ReadFeed(newsFeed.FeedUrl);
+                NewsItemBuilder ItemBuilder;
+
+                var concreteFeeds = NewsFeedConcrete.GetFeeds();
+                if (!concreteFeeds.ContainsKey(newsFeed.FeedName)) ItemBuilder = new NewsItemBuilder(newsFeed.ImageDefault);
+                else ItemBuilder = concreteFeeds[newsFeed.FeedName];
+
+                foreach (SyndicationItem item in feed.Items)
+                {
+                    NewsItem newsItem = new()
+                    {
+                        NewsFeedId = newsFeed.Id,
+                        Title = ItemBuilder.GetTitle(item),
+                        Summary = ItemBuilder.GetSummary(item),
+                        Link = ItemBuilder.GetLink(item),
+                        Image = ItemBuilder.GetImage(item),
+                        Date = ItemBuilder.GetDate(item)
+                    };
+                    feedItemList.Add(newsItem);
+                }
+            }
+
+            _dbContext.Set<NewsItem>().AddRange(feedItemList);
+            _dbContext.SaveChanges();
+            /*
             NewsFeedList feedList = new();
 
-            foreach (INewsFeedBase newsFeed in feedList.FeedList)
+            foreach (NewsFeedBase newsFeed in feedList.FeedList)
             {
                 List<NewsItem> newsFeedItems = newsFeed.GetNewsItems();
                 foreach (NewsItem item in newsFeedItems)
@@ -47,14 +136,46 @@ namespace NewsAppNet.Services
             }
 
             _dbContext.SaveChanges();
+            */
+        }
+
+        public SyndicationFeed ReadFeed(string feedUrl)
+        {
+            SyndicationFeed feed = new();
+            try
+            {
+                XmlReader reader = XmlReader.Create(feedUrl);
+                feed = SyndicationFeed.Load(reader);
+                reader.Close();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return feed;
+        }
+
+        public NewsItemBuilder GetNewsItemBuilder(NewsFeedModel newsFeed)
+        {
+            // Non-concrete feeds always use the general news item builder
+            if (!newsFeed.IsConcrete) return new NewsItemBuilder(newsFeed.ImageDefault);
+
+            // Fetch dictionary object that ties concrete feeds
+            // to their specific concrete news item builders
+            var feeds = NewsFeedConcrete.GetFeeds();
+
+            // If dedicated news item builder for the concrete feed
+            // is not found, returns the general builder
+            if (!feeds.ContainsKey(newsFeed.FeedName)) return new NewsItemBuilder(newsFeed.ImageDefault);
+            else return feeds[newsFeed.FeedName];
         }
 
         // Adds special admin user and four general users
         void SeedUser()
         {
-            List<User> UserList = new();
+            List<User> userList = new();
 
-            UserList.Add(new User
+            userList.Add(new User
             {
                 Username = "admin",
                 FirstName = "Admin",
@@ -62,7 +183,7 @@ namespace NewsAppNet.Services
                 Password = Crypto.HashPassword("admin"),
                 UserType = "Admin"
             });
-            UserList.Add(new User
+            userList.Add(new User
             {
                 Username = "kalli",
                 FirstName = "Karl",
@@ -70,7 +191,7 @@ namespace NewsAppNet.Services
                 Password = Crypto.HashPassword("passi"),
                 UserType = "User"
             });
-            UserList.Add(new User
+            userList.Add(new User
             {
                 Username = "jonas",
                 FirstName = "Jónas",
@@ -78,7 +199,7 @@ namespace NewsAppNet.Services
                 Password = Crypto.HashPassword("passi"),
                 UserType = "User"
             });
-            UserList.Add(new User
+            userList.Add(new User
             {
                 Username = "Sigga",
                 FirstName = "Sigrún",
@@ -86,7 +207,7 @@ namespace NewsAppNet.Services
                 Password = Crypto.HashPassword("passi"),
                 UserType = "User"
             });
-            UserList.Add(new User
+            userList.Add(new User
             {
                 Username = "örn",
                 FirstName = "Örn",
@@ -95,7 +216,7 @@ namespace NewsAppNet.Services
                 UserType = "User"
             });
 
-            foreach (var user in UserList)
+            foreach (var user in userList)
             {
                 _dbContext.Set<User>().Add(user);
             }
@@ -120,7 +241,7 @@ namespace NewsAppNet.Services
                 foreach (var user in users)
                 {
                     // Picks random news item
-                    var news = newsItems[rand.Next(newsItems.Count())];
+                    var news = newsItems[rand.Next(newsItems.Count)];
                     _dbContext.Set<Comment>().Add(new Comment
                     {
                         NewsItemId = news.Id,
@@ -149,7 +270,7 @@ namespace NewsAppNet.Services
                 foreach (var user in users)
                 {
                     // Picks random comment
-                    var comment = comments[rand.Next(comments.Count())];
+                    var comment = comments[rand.Next(comments.Count)];
                     _dbContext.Set<Reply>().Add(new Reply
                     {
                         CommentId = comment.Id,
@@ -179,7 +300,7 @@ namespace NewsAppNet.Services
                 foreach (var user in users)
                 {
                     // Picks random news item
-                    var news = newsItems[rand.Next(newsItems.Count())];
+                    var news = newsItems[rand.Next(newsItems.Count)];
                     _dbContext.Set<Favorite>().Add(new Favorite
                     {
                         NewsItemId = news.Id,

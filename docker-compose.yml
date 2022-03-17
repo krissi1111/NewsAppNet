@@ -1,7 +1,7 @@
 version: '3.4'
 
 volumes:
-    news7:    
+    news5:    
 
 services:
     newsappdb:
@@ -12,10 +12,13 @@ services:
         ports:
             - 1433:1433
         volumes:
-            - news7:/var/opt/mssql
+            - news5:/var/opt/mssql
 
     newsappnet:
-        image: newsappnet:test
+        image: newsappnet:latest
+        build:
+            context: .
+            dockerfile: NewsAppNet/Dockerfile
         depends_on:
             - newsappdb
         ports:

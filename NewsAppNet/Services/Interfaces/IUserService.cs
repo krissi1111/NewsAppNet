@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewsAppNet.Models.DataModels;
+using NewsAppNet.Models.ViewModels;
 
 namespace NewsAppNet.Services.Interfaces
 {
@@ -16,5 +17,7 @@ namespace NewsAppNet.Services.Interfaces
         UserAuthData GetUserAuthData(User user);
         UserAuthData GetUserAuthData(int userId);
         void AddUser(User user);
+        ServiceResponse<UserView> DeleteUser(int userDeleteId, int userRequestId);
+        ServiceResponse<UserView> RestoreUser(int userRestoreId, int userRequestId);
     }
 }

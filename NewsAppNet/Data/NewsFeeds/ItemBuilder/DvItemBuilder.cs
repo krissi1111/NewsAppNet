@@ -8,8 +8,8 @@ namespace NewsAppNet.Data.NewsFeeds.ItemBuilder
         {
             string summary = Item.Summary.Text;
             int start = summary.IndexOf("<p>");
-            start = start + 3;
-            int stop = summary.Substring(start).IndexOf("<a class");
+            start += 3;
+            int stop = summary[start..].IndexOf("<a class");
             if (stop < 0)
             {
                 stop = summary.Length - start;
@@ -23,10 +23,10 @@ namespace NewsAppNet.Data.NewsFeeds.ItemBuilder
             int start = summary.IndexOf("src=");
             if (start == -1)
             {
-                return NoImage;
+                return ImageDefault;
             }
             start += 5;
-            int stop = summary.Substring(start).IndexOf("class");
+            int stop = summary[start..].IndexOf("class");
             stop -= 2;
             return summary.Substring(start, stop);
         }

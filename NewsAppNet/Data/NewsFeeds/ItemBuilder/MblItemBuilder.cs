@@ -19,7 +19,7 @@ namespace NewsAppNet.Data.NewsFeeds.ItemBuilder
             int start = summary.IndexOf("https://cdn.mbl.is/frimg");
             if (start == -1)
             {
-                return NoImage;
+                return ImageDefault;
             }
             int stop = summary[start..].IndexOf(".jpg");
             stop += 4;

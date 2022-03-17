@@ -1,8 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using NewsAppNet.Models.DataModels;
-using NewsAppNet.Services;
-using CryptoHelper;
-using NewsAppNet.Data.NewsFeeds.Feeds;
 
 namespace NewsAppNet.Data
 {
@@ -13,11 +10,13 @@ namespace NewsAppNet.Data
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Reply> Replies { get; set; }
         public DbSet<Favorite> Favorites { get; set; }
+        public DbSet<NewsFeedModel> NewsFeeds { get; set; }
 
         public NewsAppDbContext(DbContextOptions<NewsAppDbContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            ModelBuilderNewsFeeds(modelBuilder);
             ModelBuilderNewsItem(modelBuilder);
             ModelBuilderUser(modelBuilder);
             ModelBuilderComment(modelBuilder);
@@ -25,182 +24,66 @@ namespace NewsAppNet.Data
             ModelBuilderFavorite(modelBuilder);
         }
 
-        void ModelBuilderNewsItem(ModelBuilder modelBuilder)
+        static void ModelBuilderNewsItem(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<NewsItem>(entity =>
             {
                 entity.ToTable("NewsItems");
-                /*
-                NewsFeedList feedList = new();
-                List<NewsItem> newsItems = new List<NewsItem>();
 
-                foreach (INewsFeedBase newsFeed in feedList.FeedList)
-                {
-                    newsItems.AddRange(newsFeed.GetNewsItems());
-                }
-
-                int id = 1;
-                newsItems.ForEach(newsItem =>
-                {
-                    newsItem.Id = id++;
-                });
-
-                entity.HasData(newsItems);
-                */
+                entity.HasOne(t => t.NewsFeedModel)
+                    .WithMany(t => t.NewsItems)
+                    .HasForeignKey(t => t.NewsFeedId);
             });
         }
 
-        void ModelBuilderUser(ModelBuilder modelBuilder)
+        static void ModelBuilderUser(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
             {
                 entity.ToTable("Users");
-                /*
-                entity.HasData(
-                    new User
-                    {
-                        Id = 1,
-                        Username = "admin",
-                        FirstName = "Admin",
-                        LastName = "Admin",
-                        Password = Crypto.HashPassword("admin"),
-                        UserType = "Admin"
-                    });
-                entity.HasData(
-                    new User
-                    {
-                        Id = 2,
-                        Username = "kalli",
-                        FirstName = "Karl",
-                        LastName = "Arnarsson",
-                        Password = Crypto.HashPassword("passi"),
-                        UserType = "User"
-                    });
-                entity.HasData(
-                    new User
-                    {
-                        Id = 3,
-                        Username = "jonas",
-                        FirstName = "Jónas",
-                        LastName = "Þórsson",
-                        Password = Crypto.HashPassword("passi"),
-                        UserType = "User"
-                    });
-                entity.HasData(
-                    new User
-                    {
-                        Id = 4,
-                        Username = "Sigga",
-                        FirstName = "Sigrún",
-                        LastName = "Jónsdóttir",
-                        Password = Crypto.HashPassword("passi"),
-                        UserType = "User"
-                    });
-                entity.HasData(
-                    new User
-                    {
-                        Id = 5,
-                        Username = "örn",
-                        FirstName = "Örn",
-                        LastName = "Atlason",
-                        Password = Crypto.HashPassword("passi"),
-                        UserType = "User"
-                    });
-                */
             });
         }
 
-        void ModelBuilderComment(ModelBuilder modelBuilder)
+        static void ModelBuilderComment(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Comment>(entity =>
             {
                 entity.ToTable("Comments");
 
                 entity.HasOne(t => t.User)
-                .WithMany(t => t.Comments)
-                .HasForeignKey(t => t.UserId);
+                    .WithMany(t => t.Comments)
+                    .HasForeignKey(t => t.UserId);
 
                 entity.HasOne(t => t.NewsItem)
-                .WithMany(t => t.Comments)
-                .HasForeignKey(t => t.NewsItemId);
-                /*
-                entity.HasData(
-                    new Comment
-                    {
-                        Id = 1,
-                        NewsItemId = 1,
-                        UserId = 2,
-                        Text = "komment",
-                        Date = DateTime.Now,
-                    });
-                entity.HasData(
-                    new Comment
-                    {
-                        Id = 2,
-                        NewsItemId = 3,
-                        UserId = 4,
-                        Text = "komment",
-                        Date = DateTime.Now,
-                    });
-                entity.HasData(
-                    new Comment
-                    {
-                        Id = 3,
-                        NewsItemId = 2,
-                        UserId = 3,
-                        Text = "komment",
-                        Date = DateTime.Now,
-                    });
-                */
+                    .WithMany(t => t.Comments)
+                    .HasForeignKey(t => t.NewsItemId);
             });
         }
 
-        void ModelBuilderReply(ModelBuilder modelBuilder)
+        static void ModelBuilderReply(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Reply>(entity =>
             {
                 entity.ToTable("Replies");
 
                 entity.HasOne(t => t.User)
-                .WithMany(t => t.Replies)
-                .HasForeignKey(t => t.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany(t => t.Replies)
+                    .HasForeignKey(t => t.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(t => t.NewsItem)
-                .WithMany(t => t.Replies)
-                .HasForeignKey(t => t.NewsItemId)
-                .OnDelete(DeleteBehavior.Restrict);
+                    .WithMany(t => t.Replies)
+                    .HasForeignKey(t => t.NewsItemId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(t => t.Comment)
-                .WithMany(t => t.Replies)
-                .HasForeignKey(t => t.CommentId)
-                .OnDelete(DeleteBehavior.Restrict);
-                /*
-                entity.HasData(
-                    new Reply
-                    {
-                        Id = 1,
-                        NewsItemId = 1,
-                        UserId = 3,
-                        CommentId = 1,
-                        Text = "reply",
-                        Date = DateTime.Now,
-                    });
-                entity.HasData(
-                    new Reply
-                    {
-                        Id = 2,
-                        NewsItemId = 1,
-                        UserId = 4,
-                        CommentId = 1,
-                        Text = "reply",
-                        Date = DateTime.Now,
-                    });
-                */
+                    .WithMany(t => t.Replies)
+                    .HasForeignKey(t => t.CommentId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
 
-        void ModelBuilderFavorite(ModelBuilder modelBuilder)
+        static void ModelBuilderFavorite(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Favorite>(entity =>
             {
@@ -215,29 +98,17 @@ namespace NewsAppNet.Data
                     .HasOne(t => t.NewsItem)
                     .WithMany(t => t.Favorites)
                     .HasForeignKey(t => t.NewsItemId);
-                /*
-                entity.HasData(
-                    new Favorite
-                    {
-                        Id = 1,
-                        UserId = 2,
-                        NewsItemId = 1,
-                    });
-                entity.HasData(
-                    new Favorite
-                    {
-                        Id = 2,
-                        UserId = 3,
-                        NewsItemId = 1,
-                    });
-                entity.HasData(
-                    new Favorite
-                    {
-                        Id = 3,
-                        UserId = 2,
-                        NewsItemId = 2,
-                    });
-                */
+            });
+        }
+
+        static void ModelBuilderNewsFeeds(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<NewsFeedModel>(entity =>
+            {
+                entity.ToTable("NewsFeeds");
+
+                entity.HasIndex(u => u.FeedUrl)
+                    .IsUnique();
             });
         }
     }

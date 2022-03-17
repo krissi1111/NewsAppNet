@@ -14,5 +14,6 @@ namespace NewsAppNet.Models.DataModels
         public string Text { get; set; } = string.Empty;
         public DateTime Date { get; set; } = DateTime.Now;
         public IList<Reply>? Replies { get; set; } = null;
+        public bool IsDeleted { get; set; } = false;
     }
 }

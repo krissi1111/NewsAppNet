@@ -7,9 +7,9 @@ namespace NewsAppNet.Services
 {
     public class FavoriteService : IFavoriteService
     {
-        IFavoriteRepository favoriteRepository;
-        INewsItemRepository newsItemRepository;
-        IUserService userService;
+        readonly IFavoriteRepository favoriteRepository;
+        readonly INewsItemRepository newsItemRepository;
+        readonly IUserService userService;
 
         public FavoriteService(
             IFavoriteRepository favoriteRepository,
@@ -36,7 +36,7 @@ namespace NewsAppNet.Services
 
             var fav = favoriteRepository.GetMany(f => f.UserId == userId);
 
-            List<FavoriteView> favViews = new List<FavoriteView>();
+            List<FavoriteView> favViews = new();
             foreach(var item in fav)
             {
                 favViews.Add(new FavoriteView(item));
@@ -89,7 +89,7 @@ namespace NewsAppNet.Services
 
         public void AddFavorite(int newsId, int userId)
         {
-            Favorite fav = new Favorite
+            Favorite fav = new()
             {
                 UserId = userId,
                 NewsItemId = newsId
@@ -103,7 +103,7 @@ namespace NewsAppNet.Services
         {
             Favorite fav = favoriteRepository.GetSingle(f => f.NewsItemId == newsId && f.UserId == userId);
             
-            favoriteRepository.Delete(fav);
+            favoriteRepository.Delete(fav, true);
             favoriteRepository.Commit();
         }
     }

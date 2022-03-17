@@ -1,7 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using NewsAppNet.Data.NewsFeeds.Feeds;
-using NewsAppNet.Data.NewsFeeds.ItemBuilder;
-using NewsAppNet.Data.Repositories.Interfaces;
+﻿using NewsAppNet.Data.Repositories.Interfaces;
 using NewsAppNet.Models.DataModels;
 using NewsAppNet.Models.ViewModels;
 using NewsAppNet.Services.Interfaces;
@@ -10,28 +7,29 @@ namespace NewsAppNet.Services
 {
     public class NewsService : INewsService
     {
-        INewsItemRepository newsItemRepository;
-        ICommentRepository commentRepository;
-        IFavoriteRepository favoriteRepository;
-        ICommentReplyService commentReplyService;
-        IFavoriteService favoriteService;
-        IUserService userService;
+        readonly INewsItemRepository newsItemRepository;
+        readonly ICommentRepository commentRepository;
+        readonly IFavoriteRepository favoriteRepository;
+        readonly IUserService userService;
+        readonly INewsFeedService newsFeedService;
+        readonly INewsFeedRepository newsFeedRepository;
 
         public NewsService(
             INewsItemRepository newsItemRepository,
             ICommentRepository commentRepository,
             IFavoriteRepository favoriteRepository,
-            ICommentReplyService commentReplyService, 
-            IFavoriteService favoriteService,
-            IUserService userService
+            ICommentReplyService commentReplyService,
+            IUserService userService,
+            INewsFeedService newsFeedService,
+            INewsFeedRepository newsFeedRepository
             )
         {
             this.newsItemRepository = newsItemRepository;
             this.commentRepository = commentRepository;
             this.favoriteRepository = favoriteRepository;
-            this.commentReplyService = commentReplyService;
-            this.favoriteService = favoriteService;
             this.userService = userService;
+            this.newsFeedService = newsFeedService;
+            this.newsFeedRepository = newsFeedRepository;
         }
 
         public bool NewsItemExists(int newsId)
@@ -48,10 +46,11 @@ namespace NewsAppNet.Services
             IEnumerable<NewsItem> news = newsItemRepository.GetAll()
                 .OrderByDescending(s => s.Date);
 
-            List<NewsItemView> newsViews = new List<NewsItemView>();
+            List<NewsItemView> newsViews = new();
             foreach (NewsItem item in news)
             {
-                newsViews.Add(new NewsItemView(item));
+                // Skips news item if soft deleted
+                if(!item.IsDeleted) newsViews.Add(new NewsItemView(item));
             }
 
             response.Data = newsViews;
@@ -72,7 +71,14 @@ namespace NewsAppNet.Services
             }
 
             NewsItem newsItem = newsItemRepository.GetSingle(Id);
-            NewsItemView newsItemView = new NewsItemView(newsItem);
+            if (newsItem.IsDeleted)
+            {
+                response.Success = false;
+                response.Message = string.Format("News item with id: {0} is not available", Id.ToString());
+                return response;
+            }
+
+            NewsItemView newsItemView = new(newsItem);
 
             response.Data = newsItemView;
             response.Success= true;
@@ -89,7 +95,7 @@ namespace NewsAppNet.Services
             var summary = search.Summary;
             var dateStart = search.DateStart;
             var dateEnd = search.DateEnd;
-            var origin = search.Origin;
+            var newsFeedIds = search.NewsFeedIds;
 
             if(!string.IsNullOrEmpty(dateStart) && !string.IsNullOrEmpty(dateEnd))
             {
@@ -99,12 +105,17 @@ namespace NewsAppNet.Services
                 if(DateTime.Compare(start, end) > 0)
                 {
                     response.Success = false;
-                    response.Message = "End date is earlier than start date";
+                    response.Message = "End date cannot be earlier than start date";
                     return response;
                 }
             }
 
             IEnumerable<NewsItem> news = newsItemRepository.GetAll();
+
+            if (newsFeedIds != null)
+            {
+                news = news.Where(s => newsFeedIds.Contains(s.NewsFeedId));
+            }
 
             if (!string.IsNullOrEmpty(title))
             {
@@ -122,11 +133,6 @@ namespace NewsAppNet.Services
                 news = news.Where(s => s.Summary.Contains(summary));
             }
 
-            if (!string.IsNullOrEmpty(origin))
-            {
-                news = news.Where(s => s.Origin.Contains(origin));
-            }
-
             if (!string.IsNullOrEmpty(dateStart))
             {
                 news = news.Where(s => s.Date >= DateTime.Parse(dateStart));
@@ -139,10 +145,11 @@ namespace NewsAppNet.Services
 
             news = news.OrderByDescending(s => s.Date);
 
-            List<NewsItemView> newsViews = new List<NewsItemView>();
+            List<NewsItemView> newsViews = new();
             foreach (NewsItem item in news)
             {
-                newsViews.Add(new NewsItemView(item));
+                // Skips news item if soft deleted
+                if(!item.IsDeleted) newsViews.Add(new NewsItemView(item));
             }
 
             response.Success = true;
@@ -168,28 +175,49 @@ namespace NewsAppNet.Services
                 response.Message = "This action is only for admins";
             }
 
-            List<NewsItemView> items = new List<NewsItemView>();
+            var newsFeedIds = newsFeedRepository.GetAll().Select(feed => feed.Id).ToList();
+            return AddNews(userId, newsFeedIds);
+        }
 
-            NewsFeedList feedList = new();
+        public ServiceResponse<List<NewsItemView>> AddNews(int userId, IEnumerable<int> newsFeedIds)
+        {
+            ServiceResponse<List<NewsItemView>> response = new();
 
-            foreach (INewsFeedBase newsFeed in feedList.FeedList)
+            var currentUser = userService.GetUser(userId);
+            if (currentUser == null)
             {
-                List<NewsItem> newsFeedItems = newsFeed.GetNewsItems();
-                foreach (NewsItem item in newsFeedItems)
+                response.Success = false;
+                response.Message = "This action is only for admins";
+            }
+            else if (currentUser.UserType != "Admin")
+            {
+                response.Success = false;
+                response.Message = "This action is only for admins";
+            }
+
+            List<NewsItemView> itemViews = new();
+            IEnumerable<NewsFeedModel> newsFeeds;
+
+            newsFeeds = newsFeedRepository.GetMany(newsFeedIds).ToList();
+
+            foreach(NewsFeedModel feed in newsFeeds)
+            {
+                List<NewsItem> items = newsFeedService.GetNewsItems(feed);
+                foreach (NewsItem item in items)
                 {
                     if (newsItemRepository.NewsItemExists(item.Link)) continue;
                     newsItemRepository.Add(item);
-                    items.Add(new NewsItemView(item));
+                    itemViews.Add(new NewsItemView(item));
                 }
             }
             newsItemRepository.Commit();
 
-            response.Data = items;
             response.Success = true;
+            response.Data = itemViews;
             return response;
         }
 
-        // Deletes a single news item
+        // Marks a single news item as deleted (soft delete)
         // Only for admins
         public ServiceResponse<NewsItemView> DeleteNews(int newsId, int userId)
         {
@@ -220,12 +248,12 @@ namespace NewsAppNet.Services
 
             // Need to manually delete comments and replies 
             // because of foreign key relationships
-            var comments = commentReplyService.GetComments(newsId);
+            /*var comments = commentReplyService.GetComments(newsId);
             foreach (Comment comment in comments)
             {
                 commentReplyService.DeleteComment(comment.Id, userId);
             }
-
+            */
             newsItemRepository.Delete(news);
             newsItemRepository.Commit();
 
@@ -269,13 +297,60 @@ namespace NewsAppNet.Services
                 newsViewCom.Add(new NewsItemView(item));
             }
 
-            var dict = new Dictionary<string, List<NewsItemView>>();
-            dict.Add("favorites", newsViewFav);
-            dict.Add("comments", newsViewCom);
+            var dict = new Dictionary<string, List<NewsItemView>>
+            {
+                { "favorites", newsViewFav },
+                { "comments", newsViewCom }
+            };
 
             response.Success = true;
             response.Data = dict;
             
+            return response;
+        }
+
+        // Used for restoring soft deleted news items
+        public ServiceResponse<NewsItemView> RestoreNews(int newsId, int userId)
+        {
+            ServiceResponse<NewsItemView> response = new();
+
+            var news = newsItemRepository.GetSingle(newsId);
+            if (news == null)
+            {
+                response.Success = false;
+                response.Message = "News item not found";
+                return response;
+            }
+            else if (!news.IsDeleted)
+            {
+                response.Success = false;
+                response.Message = string.Format("News item {0} is not soft deleted", newsId);
+                return response;
+            }
+
+            var currentUser = userService.GetUser(userId);
+            if (currentUser == null)
+            {
+                response.Success = false;
+                response.Message = "This action is only for admins";
+                return response;
+            }
+            else if (currentUser.UserType != "Admin")
+            {
+                response.Success = false;
+                response.Message = "This action is only for admins";
+                return response;
+            }
+
+            news.IsDeleted = false;
+            newsItemRepository.Update(news);
+            newsItemRepository.Commit();
+
+            var newsView = new NewsItemView(news);
+
+            response.Success = true;
+            response.Data = newsView;
+
             return response;
         }
     }

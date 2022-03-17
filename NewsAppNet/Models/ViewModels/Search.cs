@@ -6,6 +6,6 @@
         public string? Summary { get; set; } = string.Empty;
         public string DateStart { get; set; } = new DateTime().ToString();
         public string DateEnd { get; set; } = DateTime.Now.ToString();
-        public string Origin { get; set; } = string.Empty;
+        public List<int>? NewsFeedIds { get; set; }
     }
 }
