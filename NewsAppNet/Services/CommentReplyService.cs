@@ -8,10 +8,10 @@ namespace NewsAppNet.Services
 {
     public class CommentReplyService : ICommentReplyService
     {
-        ICommentRepository commentRepository;
-        IReplyRepository replyRepository;
-        IUserService userService;
-        INewsItemRepository newsItemRepository;
+        readonly ICommentRepository commentRepository;
+        readonly IReplyRepository replyRepository;
+        readonly IUserService userService;
+        readonly INewsItemRepository newsItemRepository;
 
         public CommentReplyService(
             ICommentRepository commentRepository, 
@@ -139,6 +139,7 @@ namespace NewsAppNet.Services
                             if (!userC.IsDeleted) fullName = string.Format("{0} {1}", userC.FirstName, userC.LastName);
                         }
                         commentView.UserFullName = fullName;
+                        commentView.Text = "(Comment deleted) " + commentView.Text;
                     }
                 }
                 else
@@ -180,7 +181,7 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            Comment comment = new Comment
+            Comment comment = new()
             {
                 NewsItemId = newsId,
                 UserId = userId,
@@ -215,7 +216,7 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            Reply reply = new Reply
+            Reply reply = new()
             {
                 NewsItemId = newsId,
                 UserId = userId,
