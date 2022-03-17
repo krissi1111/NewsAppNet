@@ -5,11 +5,26 @@ using System.Xml;
 
 namespace NewsAppNet.Data.NewsFeeds.Feeds
 {
-    public class NewsFeedBase<T> : INewsFeedBase where T : class, INewsItemBuilder, new()
+    public class NewsFeedBase
     {
         public string Url { get; set; } = string.Empty;
         public string FeedName { get; set; } = string.Empty;
-        private T ItemBuilder = new T();
+        public string ImageDefault { get; set; } = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/480px-No_image_available.svg.png";
+
+        public NewsFeedBase(string feedUrl, string feedName, string image)
+        {
+            Url = feedUrl;
+            FeedName = feedName;
+            ImageDefault = image;
+        }
+
+        public NewsFeedBase(string feedUrl, string feedName)
+        {
+            Url = feedUrl;
+            FeedName = feedName;
+        }
+
+        public NewsFeedBase() { }
 
         // Attempts to read news feed and returns as SyndicationFeed object
         public SyndicationFeed ReadFeed()
@@ -33,13 +48,14 @@ namespace NewsAppNet.Data.NewsFeeds.Feeds
         public List<NewsItem> GetNewsItems()
         {
             SyndicationFeed feed = ReadFeed();
+            NewsItemBuilder ItemBuilder = GetItemBuilder();
 
             List<NewsItem> feedItemList = new();
             foreach (SyndicationItem item in feed.Items)
             {
                 NewsItem newsItem = new()
                 {
-                    Origin = FeedName,
+                    NewsFeedId = 1,
                     Title = ItemBuilder.GetTitle(item),
                     Summary = ItemBuilder.GetSummary(item),
                     Link = ItemBuilder.GetLink(item),
@@ -50,6 +66,11 @@ namespace NewsAppNet.Data.NewsFeeds.Feeds
                 feedItemList.Add(newsItem);
             }
             return feedItemList;
+        }
+
+        public virtual NewsItemBuilder GetItemBuilder()
+        {
+            return new NewsItemBuilder(ImageDefault);
         }
     }
 }

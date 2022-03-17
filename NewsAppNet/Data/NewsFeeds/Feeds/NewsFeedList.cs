@@ -5,7 +5,7 @@ namespace NewsAppNet.Data.NewsFeeds.Feeds
 {
     public class NewsFeedList
     {
-        public List<INewsFeedBase> FeedList { get; } = new();
+        public List<NewsFeedBase> FeedList { get; } = new();
 
         public NewsFeedList()
         {
