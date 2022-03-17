@@ -11,13 +11,13 @@ namespace NewsAppNet.Data.NewsFeeds.ItemBuilder
             {
                 // Check if fetching link is successful
                 HttpResponseMessage response = client.GetAsync(link).Result;
-                if (!response.IsSuccessStatusCode) return NoImage;
+                if (!response.IsSuccessStatusCode) return ImageDefault;
 
                 string linkContent = client.GetStringAsync(link).Result;
                 int start = linkContent.IndexOf("https://www.visir.is/i/");
                 if (start == -1)
                 {
-                    return NoImage;
+                    return ImageDefault;
                 }
                 int stop = linkContent[start..].IndexOf(".jpg");
                 stop += 4;

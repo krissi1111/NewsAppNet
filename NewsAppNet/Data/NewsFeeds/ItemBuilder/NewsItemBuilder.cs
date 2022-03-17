@@ -4,36 +4,41 @@ namespace NewsAppNet.Data.NewsFeeds.ItemBuilder
 {
     public class NewsItemBuilder : INewsItemBuilder
     {
-        public string NoImage = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/480px-No_image_available.svg.png";
+        public string ImageDefault { get; set; } = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/480px-No_image_available.svg.png";
 
-        public virtual string GetTitle(SyndicationItem Item)
+        public NewsItemBuilder(string image)
         {
-            if (Item.Title == null) return "NO TITLE";
-            else return Item.Title.Text;
+            ImageDefault = image;
         }
 
-        public virtual string GetSummary(SyndicationItem Item)
+        public NewsItemBuilder() { }
+
+        public virtual string GetTitle(SyndicationItem item)
         {
-            var summary = Item.Summary.Text;
-            if (summary == null) return "NO SUMMARY";
-            else return summary;
+            if (item.Title == null) return "NO TITLE";
+            else return item.Title.Text;
         }
 
-        public virtual string GetLink(SyndicationItem Item)
+        public virtual string GetSummary(SyndicationItem item)
         {
-            var link = Item.Links[0].GetAbsoluteUri().ToString();
-            if (link == null) return "NO LINK";
-            else return link;
+            if (item.Summary == null) return "NO SUMMARY";
+            else return item.Summary.Text;
         }
 
-        public virtual string GetImage(SyndicationItem Item)
+        public virtual string GetLink(SyndicationItem item)
         {
-            return NoImage;
+            if (item.Links[0] == null) return "NO LINK";
+            else return item.Links[0].GetAbsoluteUri().ToString();
         }
 
-        public virtual DateTime GetDate(SyndicationItem Item)
+        public virtual string GetImage(SyndicationItem item)
         {
-            return Item.PublishDate.DateTime;
+            return ImageDefault;
+        }
+
+        public virtual DateTime GetDate(SyndicationItem item)
+        {
+            return item.PublishDate.DateTime;
         }
     }
 }
