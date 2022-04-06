@@ -14,7 +14,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 var configuration = builder.Configuration;
 
+var docker = (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true");
+
 var connectionString = configuration.GetConnectionString("NewsAppDb");
+if(!docker) connectionString = configuration.GetConnectionString("NotDocker");
 builder.Services.AddDbContext<NewsAppDbContext>(x => x.UseSqlServer(connectionString));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
