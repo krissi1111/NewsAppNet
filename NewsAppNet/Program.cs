@@ -26,7 +26,7 @@ if (docker)
 else
 {
     connectionString = configuration.GetConnectionString("Sqlite");
-    builder.Services.AddDbContext<SqliteDbContext>(x => x.UseSqlite(connectionString));
+    builder.Services.AddDbContext<NewsAppDbContext>(x => x.UseSqlite(connectionString));
 }
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

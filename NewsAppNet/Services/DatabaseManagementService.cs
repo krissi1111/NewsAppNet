@@ -15,13 +15,14 @@ namespace NewsAppNet.Services
                 if (docker)
                 {
                     dbContext = serviceScope.ServiceProvider.GetService<NewsAppDbContext>();
+                    dbContext.Database.Migrate();
                 }
                 else
                 {
-                    dbContext = serviceScope.ServiceProvider.GetService<SqliteDbContext>();
+                    dbContext = serviceScope.ServiceProvider.GetService<NewsAppDbContext>();
                     dbContext.Database.EnsureCreated();
                 }
-                dbContext.Database.Migrate();
+                
                 DbSeedService seedService = new(dbContext);
                 seedService.SeedDb();
             }
