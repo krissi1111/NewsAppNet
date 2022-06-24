@@ -22,7 +22,7 @@ namespace NewsAppNet.Services
             this.userService = userService;
         }
 
-        public ServiceResponse<List<FavoriteView>> GetUserFavorites(int userId)
+        public async Task<ServiceResponse<List<FavoriteView>>> GetUserFavorites(int userId)
         {
             ServiceResponse<List<FavoriteView>> response = new();
 
@@ -34,7 +34,7 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            var fav = favoriteRepository.GetMany(f => f.UserId == userId);
+            var fav = await favoriteRepository.GetMany(f => f.UserId == userId);
 
             List<FavoriteView> favViews = new();
             foreach(var item in fav)
@@ -99,9 +99,9 @@ namespace NewsAppNet.Services
             favoriteRepository.Commit();
         }
 
-        public void RemoveFavorite(int newsId, int userId)
+        public async void RemoveFavorite(int newsId, int userId)
         {
-            Favorite fav = favoriteRepository.GetSingle(f => f.NewsItemId == newsId && f.UserId == userId);
+            Favorite fav = await favoriteRepository.GetSingle(f => f.NewsItemId == newsId && f.UserId == userId);
             
             favoriteRepository.Delete(fav, true);
             favoriteRepository.Commit();

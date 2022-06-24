@@ -9,10 +9,10 @@ namespace NewsAppNet.Services.Interfaces
     {
         bool NewsFeedExists(string feedUrl);
         bool NewsFeedExists(int id);
-        ServiceResponse<List<NewsFeedView>> GetFeeds(IEnumerable<int>? ids);
-        ServiceResponse<List<NewsFeedView>> GetAll();
-        ServiceResponse<List<NewsFeedView>> GetMany(IEnumerable<int> ids);
-        ServiceResponse<NewsFeedView> GetSingle(int id);
+        Task<ServiceResponse<List<NewsFeedView>>> GetFeeds(IEnumerable<int>? ids);
+        Task<ServiceResponse<List<NewsFeedView>>> GetAll();
+        Task<ServiceResponse<List<NewsFeedView>>> GetMany(IEnumerable<int> ids);
+        Task<ServiceResponse<NewsFeedView>> GetSingle(int id);
         SyndicationFeed? ReadFeed(string feedUrl);
         List<NewsItem> GetNewsItems(NewsFeedModel newsFeed);
         NewsItemBuilder GetNewsItemBuilder(NewsFeedModel newsFeed);

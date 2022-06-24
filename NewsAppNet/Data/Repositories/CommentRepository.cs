@@ -8,14 +8,14 @@ namespace NewsAppNet.Data.Repositories
     {
         public CommentRepository(NewsAppDbContext context) : base(context) { }
 
-        public IEnumerable<Comment> GetMany(int newsId)
+        public async Task<IEnumerable<Comment>> GetMany(int newsId)
         {
-            return GetMany(t => t.NewsItemId == newsId);
+            return await GetMany(t => t.NewsItemId == newsId);
         }
 
-        public IEnumerable<Comment> GetUserComments(int userId)
+        public async Task<IEnumerable<Comment>> GetUserComments(int userId)
         {
-            return GetMany(t => t.UserId == userId);
+            return await GetMany(t => t.UserId == userId);
         }
     }
 }

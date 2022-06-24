@@ -6,6 +6,6 @@ namespace NewsAppNet.Data.Repositories.Interfaces
     {
         bool NewsItemExists(string ItemLink);
         bool NewsItemExists(int newsId);
-        IEnumerable<NewsItem> GetManyOrdered(IEnumerable<int> ids);
+        Task<IEnumerable<NewsItem>> GetManyOrdered(IEnumerable<int> ids);
     }
 }

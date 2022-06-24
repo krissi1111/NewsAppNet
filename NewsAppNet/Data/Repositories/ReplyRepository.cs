@@ -7,14 +7,14 @@ namespace NewsAppNet.Data.Repositories
     {
         public ReplyRepository(NewsAppDbContext context) : base(context) { }
 
-        public IEnumerable<Reply> GetMany(int newsId)
+        public async Task<IEnumerable<Reply>> GetMany(int newsId)
         {
-            return GetMany(t => t.NewsItemId == newsId);
+            return await GetMany(t => t.NewsItemId == newsId);
         }
 
-        public IEnumerable<Reply> GetUserComments(int userId)
+        public async Task<IEnumerable<Reply>> GetUserComments(int userId)
         {
-            return GetMany(t => t.UserId == userId);
+            return await GetMany(t => t.UserId == userId);
         }
     }
 }

@@ -18,30 +18,71 @@ namespace NewsAppNet.Data.Repositories
         {
             _context = context;
         }
-        public virtual int Count()
+        public async virtual Task<int> Count()
         {
-            return _context.Set<T>().Count();
+            return await _context.Set<T>().CountAsync();
         }
-        public virtual IEnumerable<T> GetAll()
+        public async virtual Task<IEnumerable<T>> GetAll()
         {
-            return _context.Set<T>().AsEnumerable();
+            return await _context.Set<T>().ToListAsync();
         }
-        public virtual IEnumerable<T> GetMany(Expression<Func<T, bool>> query)
+        public async virtual Task<IEnumerable<T>> GetAllInclude(params Expression<Func<T, IEntityBase>>[] include)
         {
-            return _context.Set<T>().Where(query);
+            var set = _context.Set<T>().AsQueryable();
+            foreach (var item in include)
+            {
+                set = set.Include(item);
+            }
+            return await set.ToListAsync();
         }
-        public virtual IEnumerable<T> GetMany(IEnumerable<int> ids)
+        public async virtual Task<IEnumerable<T>> GetAllInclude(params Expression<Func<T, IEnumerable<IEntityBase>>>[] include)
         {
-            return _context.Set<T>().Where(t => ids.Contains(t.Id));
+            var set = _context.Set<T>().AsQueryable();
+            foreach (var item in include)
+            {
+                set = set.Include(item);
+            }
+            return await set.ToListAsync();
         }
-        public virtual T GetSingle(int id)
+        public async virtual Task<IEnumerable<T>> GetMany(Expression<Func<T, bool>> query)
         {
-            return _context.Set<T>().FirstOrDefault(entity => entity.Id == id);
+            return await _context.Set<T>().Where(query).ToListAsync();
         }
-        public virtual T GetSingle(Expression<Func<T, bool>> query)
+        public async virtual Task<IEnumerable<T>> GetMany(IEnumerable<int> ids)
         {
-            return _context.Set<T>().FirstOrDefault(query);
+            return await _context.Set<T>().Where(t => ids.Contains(t.Id)).ToListAsync();
         }
+        public async virtual Task<IEnumerable<T>> GetManyInclude(Expression<Func<T, bool>> query, params Expression<Func<T, IEntityBase>>[] include)
+        {
+            var set = _context.Set<T>().AsQueryable();
+            foreach (var item in include)
+            {
+                set = set.Include(item);
+            }
+            return await set.Where(query).ToListAsync();
+        }
+        public async virtual Task<IEnumerable<T>> GetManyIncluded(Expression<Func<T, bool>> query, params Expression<Func<T, IEnumerable<IEntityBase>>>[] include)
+        {
+            var set = _context.Set<T>().AsQueryable();
+            foreach (var item in include)
+            {
+                set = set.Include(item);
+            }
+            return await set.Where(query).ToListAsync();
+        }
+        public async virtual Task<T> GetSingle(int id)
+        {
+            return await _context.Set<T>().FirstOrDefaultAsync(entity => entity.Id == id);
+        }
+        public async virtual Task<T> GetSingle(Expression<Func<T, bool>> query)
+        {
+            return await _context.Set<T>().FirstOrDefaultAsync(query);
+        }
+        /*public async virtual Task<T> GetSingleInclude(Expression<Func<T, bool>> query, params Expression<Func<T, IEntityBase[]>>[] include)
+        {
+
+        }*/
+
         public virtual void Add(T entity)
         {
             EntityEntry dbEntityEntry = _context.Entry(entity);

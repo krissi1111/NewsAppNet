@@ -8,16 +8,16 @@ namespace NewsAppNet.Services.Interfaces
     {
         string HashPassword(string password);
         bool VerifyPassword(string actualPassword, string hashedPassword);
-        bool VerifyPasswordLogin(User loginUser);
-        ServiceResponse<UserAuthData> Login(string username, string password);
-        ServiceResponse<UserAuthData> LoginToken(int userId);
-        ServiceResponse<UserAuthData> Register(User user);
-        User? GetUser(int userId);
-        User? GetUser(string username);
+        Task<bool> VerifyPasswordLogin(User loginUser);
+        Task<ServiceResponse<UserAuthData>> Login(string username, string password);
+        Task<ServiceResponse<UserAuthData>> LoginToken(int userId);
+        Task<ServiceResponse<UserAuthData>> Register(User user);
+        Task<User?> GetUser(int userId);
+        Task<User?> GetUser(string username);
         UserAuthData GetUserAuthData(User user);
-        UserAuthData GetUserAuthData(int userId);
+        Task<UserAuthData> GetUserAuthData(int userId);
         void AddUser(User user);
-        ServiceResponse<UserView> DeleteUser(int userDeleteId, int userRequestId);
-        ServiceResponse<UserView> RestoreUser(int userRestoreId, int userRequestId);
+        Task<ServiceResponse<UserView>> DeleteUser(int userDeleteId, int userRequestId);
+        Task<ServiceResponse<UserView>> RestoreUser(int userRestoreId, int userRequestId);
     }
 }

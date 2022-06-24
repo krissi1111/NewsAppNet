@@ -27,24 +27,24 @@ namespace NewsAppNet.Services
         }
 
         // Returns all comments for given news item.
-        public IEnumerable<Comment> GetComments(int newsId)
+        public async Task<IEnumerable<Comment>> GetComments(int newsId)
         {
-            return commentRepository.GetMany(t => t.NewsItemId == newsId);
+            return await commentRepository.GetMany(t => t.NewsItemId == newsId);
         }
 
         // Returns all replies for given news item.
-        public IEnumerable<Reply> GetReplies(int newsId)
+        public async Task<IEnumerable<Reply>> GetReplies(int newsId)
         {
-            return replyRepository.GetMany(t => t.NewsItemId == newsId);
+            return await replyRepository.GetMany(t => t.NewsItemId == newsId);
         }
 
         // Returns all comments and replies for given news item.
         // Replies are grouped under parent comment.
-        public ServiceResponse<List<CommentView>> GetCommentList(int newsId, int userId)
+        public async Task<ServiceResponse<List<CommentView>>> GetCommentList(int newsId, int userId)
         {
             ServiceResponse<List<CommentView>> response = new();
 
-            var user = userService.GetUser(userId);
+            var user = await userService.GetUser(userId);
             var isAdmin = false;
 
             if (user != null)
@@ -60,8 +60,8 @@ namespace NewsAppNet.Services
             }
 
             // Get all comments and replies
-            var comments = GetComments(newsId).ToList();
-            var replies = GetReplies(newsId).ToList();
+            var comments = await GetComments(newsId);
+            var replies = await GetReplies(newsId);
 
             // Go through each comment
             var commentViews = new List<CommentView>();
@@ -74,7 +74,7 @@ namespace NewsAppNet.Services
                     if (reply.CommentId != comment.Id) continue;
                     var replyView = new CommentView(reply);
 
-                    var userR = userService.GetUser(reply.UserId);
+                    var userR = await userService.GetUser(reply.UserId);
 
                     // Checks if reply soft deleted
                     if (reply.IsDeleted)
@@ -115,7 +115,7 @@ namespace NewsAppNet.Services
                 
                 var commentView = new CommentView(comment);
 
-                var userC = userService.GetUser(comment.UserId);
+                var userC = await userService.GetUser(comment.UserId);
 
                 // Checks if comment soft deleted
                 if (comment.IsDeleted)
@@ -162,7 +162,7 @@ namespace NewsAppNet.Services
             return response;
         }
 
-        public ServiceResponse<CommentView> AddComment(int newsId, int userId, string commentText)
+        public async Task<ServiceResponse<CommentView>> AddComment(int newsId, int userId, string commentText)
         {
             ServiceResponse<CommentView> response = new();
 
@@ -197,7 +197,7 @@ namespace NewsAppNet.Services
             return response;
         }
 
-        public ServiceResponse<CommentView> AddReply(int newsId, int userId, int commentId, string commentText)
+        public async Task<ServiceResponse<CommentView>> AddReply(int newsId, int userId, int commentId, string commentText)
         {
             ServiceResponse<CommentView> response = new();
 
@@ -236,11 +236,11 @@ namespace NewsAppNet.Services
         // Used for editing already existing comments.
         // Users can only edit their own comments.
         // Admin can edit any comment.
-        public ServiceResponse<CommentView> EditComment(int commentId, int userId, string commentText)
+        public async Task<ServiceResponse<CommentView>> EditComment(int commentId, int userId, string commentText)
         {
             ServiceResponse<CommentView> response = new();
 
-            var comment = commentRepository.GetSingle(commentId);
+            var comment = await commentRepository.GetSingle(commentId);
             if (comment == null)
             {
                 response.Success = false;
@@ -248,7 +248,7 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            var user = userService.GetUser(userId);
+            var user = await userService.GetUser(userId);
             if (user == null)
             {
                 response.Success = false;
@@ -284,11 +284,11 @@ namespace NewsAppNet.Services
         // Used for editing already existing replies.
         // Users can only edit their own replies.
         // Admin can edit any reply.
-        public ServiceResponse<CommentView> EditReply(int replyId, int userId, string commentText)
+        public async Task<ServiceResponse<CommentView>> EditReply(int replyId, int userId, string commentText)
         {
             ServiceResponse<CommentView> response = new();
 
-            var reply = replyRepository.GetSingle(replyId);
+            var reply = await replyRepository.GetSingle(replyId);
             if (reply == null)
             {
                 response.Success = false;
@@ -296,7 +296,7 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            var user = userService.GetUser(userId);
+            var user = await userService.GetUser(userId);
             if (user == null)
             {
                 response.Success = false;
@@ -332,11 +332,11 @@ namespace NewsAppNet.Services
         // Used for deleting comments.
         // Users can only delete their own comments.
         // Admin can delete any comment.
-        public ServiceResponse<CommentView> DeleteComment(int commentId, int userId)
+        public async Task<ServiceResponse<CommentView>> DeleteComment(int commentId, int userId)
         {
             ServiceResponse<CommentView> response = new();
 
-            var comment = commentRepository.GetSingle(commentId);
+            var comment = await commentRepository.GetSingle(commentId);
             if (comment == null)
             {
                 response.Success = false;
@@ -344,7 +344,7 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            var user = userService.GetUser(userId);
+            var user = await userService.GetUser(userId);
             if (user == null)
             {
                 response.Success = false;
@@ -394,11 +394,11 @@ namespace NewsAppNet.Services
         // Used for deleting replies.
         // Users can only delete their own replies.
         // Admin can delete any reply.
-        public ServiceResponse<CommentView> DeleteReply(int replyId, int userId)
+        public async Task<ServiceResponse<CommentView>> DeleteReply(int replyId, int userId)
         {
             ServiceResponse<CommentView> response = new();
 
-            var reply = replyRepository.GetSingle(replyId);
+            var reply = await replyRepository.GetSingle(replyId);
             if (reply == null)
             {
                 response.Success = false;
@@ -406,7 +406,7 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            var user = userService.GetUser(userId);
+            var user = await userService.GetUser(userId);
             if (user == null)
             {
                 response.Success = false;
@@ -433,11 +433,11 @@ namespace NewsAppNet.Services
         }
 
         // Used for restoring soft deleted comments
-        public ServiceResponse<CommentView> RestoreComment(int commentId, int userId)
+        public async Task<ServiceResponse<CommentView>> RestoreComment(int commentId, int userId)
         {
             ServiceResponse<CommentView> response = new();
 
-            var comment = commentRepository.GetSingle(commentId);
+            var comment = await commentRepository.GetSingle(commentId);
             if (comment == null)
             {
                 response.Success = false;
@@ -451,7 +451,7 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            var currentUser = userService.GetUser(userId);
+            var currentUser = await userService.GetUser(userId);
             if (currentUser == null)
             {
                 response.Success = false;
@@ -478,11 +478,11 @@ namespace NewsAppNet.Services
         }
 
         // Used for restoring soft deleted replies
-        public ServiceResponse<CommentView> RestoreReply(int replyId, int userId)
+        public async Task<ServiceResponse<CommentView>> RestoreReply(int replyId, int userId)
         {
             ServiceResponse<CommentView> response = new();
 
-            var reply = replyRepository.GetSingle(replyId);
+            var reply = await replyRepository.GetSingle(replyId);
             if (reply == null)
             {
                 response.Success = false;
@@ -496,7 +496,7 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            var currentUser = userService.GetUser(userId);
+            var currentUser = await userService.GetUser(userId);
             if (currentUser == null)
             {
                 response.Success = false;

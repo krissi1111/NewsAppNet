@@ -1,5 +1,6 @@
 ﻿using NewsAppNet.Data.Repositories.Interfaces;
 using NewsAppNet.Models.DataModels;
+using NewsAppNet.Models.DataModels.Interfaces;
 using NewsAppNet.Models.ViewModels;
 using NewsAppNet.Services.Interfaces;
 
@@ -38,13 +39,13 @@ namespace NewsAppNet.Services
         }
 
         // Gets all news items and returns, ordered by most recent
-        public ServiceResponse<List<NewsItemView>> GetNewsAll()
+        public async Task<ServiceResponse<List<NewsItemView>>> GetNewsAll()
         {
             ServiceResponse<List<NewsItemView>> response = new();
 
             // Get all news items, ordered by most recent
-            IEnumerable<NewsItem> news = newsItemRepository.GetAll()
-                .OrderByDescending(s => s.Date);
+            IEnumerable<NewsItem> news = await newsItemRepository.GetAllInclude(n => n.NewsFeedModel);
+            news.OrderByDescending(s => s.Date);
 
             List<NewsItemView> newsViews = new();
             foreach (NewsItem item in news)
@@ -59,7 +60,7 @@ namespace NewsAppNet.Services
         }
 
         // Get specific news item
-        public ServiceResponse<NewsItemView> GetNews(int Id)
+        public async Task<ServiceResponse<NewsItemView>> GetNews(int Id)
         {
             ServiceResponse<NewsItemView> response = new();
 
@@ -70,7 +71,7 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            NewsItem newsItem = newsItemRepository.GetSingle(Id);
+            NewsItem newsItem = await newsItemRepository.GetSingle(Id);
             if (newsItem.IsDeleted)
             {
                 response.Success = false;
@@ -87,7 +88,7 @@ namespace NewsAppNet.Services
         }
 
         // Returns news items based on search criteria
-        public ServiceResponse<List<NewsItemView>> GetNewsSearch(Search search)
+        public async Task<ServiceResponse<List<NewsItemView>>> GetNewsSearch(Search search)
         {
             ServiceResponse<List<NewsItemView>> response = new();
 
@@ -110,7 +111,7 @@ namespace NewsAppNet.Services
                 }
             }
 
-            IEnumerable<NewsItem> news = newsItemRepository.GetAll();
+            IEnumerable<NewsItem> news = await newsItemRepository.GetAll();
 
             if (newsFeedIds != null)
             {
@@ -159,11 +160,11 @@ namespace NewsAppNet.Services
         }
 
         // Adds new news items from all news feeds
-        public ServiceResponse<List<NewsItemView>> AddNews(int userId)
+        public async Task<ServiceResponse<List<NewsItemView>>> AddNews(int userId)
         {
             ServiceResponse<List<NewsItemView>> response = new();
 
-            var currentUser = userService.GetUser(userId);
+            var currentUser = await userService.GetUser(userId);
             if(currentUser == null)
             {
                 response.Success = false;
@@ -175,15 +176,16 @@ namespace NewsAppNet.Services
                 response.Message = "This action is only for admins";
             }
 
-            var newsFeedIds = newsFeedRepository.GetAll().Select(feed => feed.Id).ToList();
-            return AddNews(userId, newsFeedIds);
+            var newsFeeds = await newsFeedRepository.GetAll();
+            var newsFeedIds = newsFeeds.Select(feed => feed.Id);
+            return await AddNews(userId, newsFeedIds);
         }
 
-        public ServiceResponse<List<NewsItemView>> AddNews(int userId, IEnumerable<int> newsFeedIds)
+        public async Task<ServiceResponse<List<NewsItemView>>> AddNews(int userId, IEnumerable<int> newsFeedIds)
         {
             ServiceResponse<List<NewsItemView>> response = new();
 
-            var currentUser = userService.GetUser(userId);
+            var currentUser = await userService.GetUser(userId);
             if (currentUser == null)
             {
                 response.Success = false;
@@ -198,7 +200,7 @@ namespace NewsAppNet.Services
             List<NewsItemView> itemViews = new();
             IEnumerable<NewsFeedModel> newsFeeds;
 
-            newsFeeds = newsFeedRepository.GetMany(newsFeedIds).ToList();
+            newsFeeds = await newsFeedRepository.GetMany(newsFeedIds);
 
             foreach(NewsFeedModel feed in newsFeeds)
             {
@@ -219,11 +221,11 @@ namespace NewsAppNet.Services
 
         // Marks a single news item as deleted (soft delete)
         // Only for admins
-        public ServiceResponse<NewsItemView> DeleteNews(int newsId, int userId)
+        public async Task<ServiceResponse<NewsItemView>> DeleteNews(int newsId, int userId)
         {
             ServiceResponse<NewsItemView> response = new();
 
-            var currentUser = userService.GetUser(userId);
+            var currentUser = await userService.GetUser(userId);
             if (currentUser == null)
             {
                 response.Success = false;
@@ -237,7 +239,7 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            var news = newsItemRepository.GetSingle(newsId);
+            var news = await newsItemRepository.GetSingle(newsId);
             if(news == null)
             {
                 response.Success = false;
@@ -264,35 +266,41 @@ namespace NewsAppNet.Services
         }
 
         // Returns most popular news items based on number of comments or favorites
-        public ServiceResponse<Dictionary<string, List<NewsItemView>>> GetPopularNews(int amount = 5)
+        public async Task<ServiceResponse<Dictionary<string, List<NewsItemView>>>> GetPopularNews(int amount = 5)
         {
             ServiceResponse<Dictionary<string, List<NewsItemView>>> response = new();
 
             // Get most favorited news items
-            var popularFavorites = favoriteRepository.GetAll()
+            var popFav = await favoriteRepository.GetAll();
+            var popularFavorites = popFav
                 .GroupBy(t => t.NewsItemId)
                 .OrderByDescending(t => t.Count())
                 .Select(t => t.Key)
                 .Take(amount);
 
             // Get most commented news items
-            var popularComments = commentRepository.GetAll()
+            var popCom = await commentRepository.GetAll();
+            var popularComments = popCom
                 .GroupBy(t => t.NewsItemId)
                 .OrderByDescending(t => t.Count())
                 .Select(t => t.Key)
                 .Take(amount);
 
-            var newsItemsFav = newsItemRepository.GetManyOrdered(popularFavorites);
-            var newsItemsCom = newsItemRepository.GetManyOrdered(popularComments);
+            //var newsItemsFav = await newsItemRepository.GetManyOrdered(popularFavorites);
+            var newsItemsFav = await newsItemRepository.GetAllInclude(n => n.Favorites);
+            var newsItemsCom = await newsItemRepository.GetAllInclude(n => n.Comments);
+
+            var newsIF = newsItemsFav.OrderByDescending(n => n.Favorites.Count()).Take(5);
+            var newsIC = newsItemsCom.OrderByDescending(n => n.Comments.Count()).Take(5);
 
             var newsViewFav = new List<NewsItemView>();
-            foreach (NewsItem item in newsItemsFav)
+            foreach (NewsItem item in newsIF)
             {
                 newsViewFav.Add(new NewsItemView(item));
             }
 
             var newsViewCom = new List<NewsItemView>();
-            foreach (NewsItem item in newsItemsCom)
+            foreach (NewsItem item in newsIC)
             {
                 newsViewCom.Add(new NewsItemView(item));
             }
@@ -310,11 +318,11 @@ namespace NewsAppNet.Services
         }
 
         // Used for restoring soft deleted news items
-        public ServiceResponse<NewsItemView> RestoreNews(int newsId, int userId)
+        public async Task<ServiceResponse<NewsItemView>> RestoreNews(int newsId, int userId)
         {
             ServiceResponse<NewsItemView> response = new();
 
-            var news = newsItemRepository.GetSingle(newsId);
+            var news = await newsItemRepository.GetSingle(newsId);
             if (news == null)
             {
                 response.Success = false;
@@ -328,7 +336,7 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            var currentUser = userService.GetUser(userId);
+            var currentUser = await userService.GetUser(userId);
             if (currentUser == null)
             {
                 response.Success = false;

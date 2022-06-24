@@ -19,12 +19,12 @@ namespace NewsAppNet.Data.Repositories
             return news != null;
         }
 
-        public IEnumerable<NewsItem> GetManyOrdered(IEnumerable<int> ids)
+        public async Task<IEnumerable<NewsItem>> GetManyOrdered(IEnumerable<int> ids)
         {
             var newsItems = new List<NewsItem>();
             foreach (var id in ids)
             {
-                newsItems.Add(GetSingle(id));
+                newsItems.Add(await GetSingle(id));
             }
 
             return newsItems;

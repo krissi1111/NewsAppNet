@@ -46,10 +46,10 @@ namespace NewsAppNet.Controllers
         // Adds a new comment
         [Authorize]
         [HttpPost("addComment")]
-        public ActionResult<CommentView> AddComment([FromForm] int newsId, [FromForm] string commentText)
+        public async Task<IActionResult> AddComment([FromForm] int newsId, [FromForm] string commentText)
         {
             int userId = GetUserId();
-            ServiceResponse<CommentView> serviceResponse = commentReplyService.AddComment(newsId, userId, commentText);
+            ServiceResponse<CommentView> serviceResponse = await commentReplyService.AddComment(newsId, userId, commentText);
 
             return HandleResponse(serviceResponse);
         }
@@ -57,10 +57,10 @@ namespace NewsAppNet.Controllers
         // Adds a new reply
         [Authorize]
         [HttpPost("addReply")]
-        public ActionResult<CommentView> AddReply([FromForm] int newsId, [FromForm] int commentId, [FromForm] string replyText)
+        public async Task<IActionResult> AddReply([FromForm] int newsId, [FromForm] int commentId, [FromForm] string replyText)
         {
             int userId = GetUserId();
-            ServiceResponse<CommentView> serviceResponse = commentReplyService.AddReply(newsId, userId, commentId, replyText);
+            ServiceResponse<CommentView> serviceResponse = await commentReplyService.AddReply(newsId, userId, commentId, replyText);
 
             return HandleResponse(serviceResponse);
         }
@@ -69,10 +69,10 @@ namespace NewsAppNet.Controllers
         // Only original comment author or admin allowed.
         [Authorize]
         [HttpPatch("editComment")]
-        public ActionResult EditComment([FromForm] int commentId, [FromForm] string commentText)
+        public async Task<IActionResult> EditComment([FromForm] int commentId, [FromForm] string commentText)
         {
             int userId = GetUserId();
-            ServiceResponse<CommentView> serviceResponse = commentReplyService.EditComment(commentId, userId, commentText);
+            ServiceResponse<CommentView> serviceResponse = await commentReplyService.EditComment(commentId, userId, commentText);
 
             return HandleResponse(serviceResponse);
         }
@@ -81,10 +81,10 @@ namespace NewsAppNet.Controllers
         // Only original reply author or admin allowed.
         [Authorize]
         [HttpPatch("editReply")]
-        public ActionResult EditReply([FromForm] int replyId, [FromForm] string replyText)
+        public async Task<IActionResult> EditReply([FromForm] int replyId, [FromForm] string replyText)
         {
             int userId = GetUserId();
-            ServiceResponse<CommentView> serviceResponse = commentReplyService.EditReply(replyId, userId, replyText);
+            ServiceResponse<CommentView> serviceResponse = await commentReplyService.EditReply(replyId, userId, replyText);
 
             return HandleResponse(serviceResponse);
         }
@@ -93,10 +93,10 @@ namespace NewsAppNet.Controllers
         // Only original comment author or admin allowed.
         [Authorize]
         [HttpPost("deleteComment")]
-        public ActionResult<CommentView> DeleteComment([FromForm] int commentId)
+        public async Task<IActionResult> DeleteComment([FromForm] int commentId)
         {
             int userId = GetUserId();
-            ServiceResponse<CommentView> serviceResponse = commentReplyService.DeleteComment(commentId, userId);
+            ServiceResponse<CommentView> serviceResponse = await commentReplyService.DeleteComment(commentId, userId);
 
             return HandleResponse(serviceResponse);
         }
@@ -105,30 +105,30 @@ namespace NewsAppNet.Controllers
         // Only original reply author or admin allowed.
         [Authorize]
         [HttpPost("deleteReply")]
-        public ActionResult<CommentView> DeleteReply([FromForm] int replyId)
+        public async Task<IActionResult> DeleteReply([FromForm] int replyId)
         {
             int userId = GetUserId();
-            ServiceResponse<CommentView> serviceResponse = commentReplyService.DeleteReply(replyId, userId);
+            ServiceResponse<CommentView> serviceResponse = await commentReplyService.DeleteReply(replyId, userId);
 
             return HandleResponse(serviceResponse);
         }
 
         [Authorize]
         [HttpPost("restoreComment")]
-        public ActionResult<CommentView> RestoreComment([FromForm] int commentId)
+        public async Task<IActionResult> RestoreComment([FromForm] int commentId)
         {
             int userId = GetUserId();
-            ServiceResponse<CommentView> serviceResponse = commentReplyService.RestoreComment(commentId, userId);
+            ServiceResponse<CommentView> serviceResponse = await commentReplyService.RestoreComment(commentId, userId);
 
             return HandleResponse(serviceResponse);
         }
 
         [Authorize]
         [HttpPost("restoreReply")]
-        public ActionResult<CommentView> RestoreReply([FromForm] int replyId)
+        public async Task<IActionResult> RestoreReply([FromForm] int replyId)
         {
             int userId = GetUserId();
-            ServiceResponse<CommentView> serviceResponse = commentReplyService.RestoreReply(replyId, userId);
+            ServiceResponse<CommentView> serviceResponse = await commentReplyService.RestoreReply(replyId, userId);
 
             return HandleResponse(serviceResponse);
         }

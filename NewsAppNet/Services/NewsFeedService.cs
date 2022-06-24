@@ -33,22 +33,22 @@ namespace NewsAppNet.Services
             return newsFeedRepository.NewsFeedExists(id);
         }
 
-        public ServiceResponse<List<NewsFeedView>> GetFeeds(IEnumerable<int>? ids)
+        public async Task<ServiceResponse<List<NewsFeedView>>> GetFeeds(IEnumerable<int>? ids)
         {
             // If news feed id array not supplied or is empty, returns all feeds
             if (ids == null || !ids.Any())
             {
-                return GetAll();
+                return await GetAll();
             }
-            else return GetMany(ids);
+            else return await GetMany(ids);
         }
 
         // Gets all news feeds
-        public ServiceResponse<List<NewsFeedView>> GetAll()
+        public async Task<ServiceResponse<List<NewsFeedView>>> GetAll()
         {
             ServiceResponse<List<NewsFeedView>> response = new();
 
-            IEnumerable<NewsFeedModel> feeds = newsFeedRepository.GetAll();
+            IEnumerable<NewsFeedModel> feeds = await newsFeedRepository.GetAll();
 
             List<NewsFeedView> newsFeedViews = new();
             foreach (NewsFeedModel feed in feeds)
@@ -62,7 +62,7 @@ namespace NewsAppNet.Services
         }
 
         // Get specific news feeds based on their id
-        public ServiceResponse<List<NewsFeedView>> GetMany(IEnumerable<int> ids)
+        public async Task<ServiceResponse<List<NewsFeedView>>> GetMany(IEnumerable<int> ids)
         {
             ServiceResponse<List<NewsFeedView>> response = new();
 
@@ -76,7 +76,7 @@ namespace NewsAppNet.Services
                 }
             }
 
-            IEnumerable<NewsFeedModel> feeds = newsFeedRepository.GetMany(ids);
+            IEnumerable<NewsFeedModel> feeds = await newsFeedRepository.GetMany(ids);
 
             List<NewsFeedView> newsFeedViews = new();
             foreach (NewsFeedModel feed in feeds)
@@ -89,7 +89,7 @@ namespace NewsAppNet.Services
             return response;
         }
 
-        public ServiceResponse<NewsFeedView> GetSingle(int id)
+        public async Task<ServiceResponse<NewsFeedView>> GetSingle(int id)
         {
             ServiceResponse<NewsFeedView> response = new();
 
@@ -100,7 +100,7 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            NewsFeedModel newsFeed = newsFeedRepository.GetSingle(id);
+            NewsFeedModel newsFeed = await newsFeedRepository.GetSingle(id);
             NewsFeedView newsFeedView = new(newsFeed);
 
             response.Data = newsFeedView;
@@ -112,12 +112,12 @@ namespace NewsAppNet.Services
         // Adds new news feed to database.
         // News feeds added this way will always
         // use the default news item builder.
-        public ServiceResponse<NewsFeedView> AddFeed(int userId, string feedName, string feedUrl, string imageDefault)
+        public async Task<ServiceResponse<NewsFeedView>> AddFeed(int userId, string feedName, string feedUrl, string imageDefault)
         {
             ServiceResponse<NewsFeedView> response = new();
 
             // Check if user has credentials for this action
-            var currentUser = userService.GetUser(userId);
+            var currentUser = await userService.GetUser(userId);
             if (currentUser == null)
             {
                 response.Success = false;
@@ -171,11 +171,11 @@ namespace NewsAppNet.Services
             return response;
         }
 
-        public ServiceResponse<NewsFeedView> DeleteFeed(int feedId, int userId)
+        public async Task<ServiceResponse<NewsFeedView>> DeleteFeed(int feedId, int userId)
         {
             ServiceResponse<NewsFeedView> response = new();
 
-            var currentUser = userService.GetUser(userId);
+            var currentUser = await userService.GetUser(userId);
             if (currentUser == null)
             {
                 response.Success = false;
@@ -189,7 +189,7 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            var feed = newsFeedRepository.GetSingle(feedId);
+            var feed = await newsFeedRepository.GetSingle(feedId);
             if (feed == null)
             {
                 response.Success = false;

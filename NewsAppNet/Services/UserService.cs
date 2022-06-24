@@ -27,11 +27,11 @@ namespace NewsAppNet.Services
             jwtLifespan = configuration.GetValue<int>("JWTLifespan");
         }
 
-        public ServiceResponse<UserAuthData> Login(string username, string password)
+        public async Task<ServiceResponse<UserAuthData>> Login(string username, string password)
         {
             ServiceResponse<UserAuthData> response = new();
 
-            var user = GetUser(username);
+            var user = await GetUser(username);
             if (user == null)
             {
                 response.Success = false;
@@ -60,11 +60,11 @@ namespace NewsAppNet.Services
             }
         }
 
-        public ServiceResponse<UserAuthData> LoginToken(int userId)
+        public async Task<ServiceResponse<UserAuthData>> LoginToken(int userId)
         {
             ServiceResponse<UserAuthData> response = new();
 
-            var user = GetUser(userId);
+            var user = await GetUser(userId);
             if (user == null)
             {
                 response.Success = false;
@@ -85,11 +85,11 @@ namespace NewsAppNet.Services
             }
         }
 
-        public ServiceResponse<UserAuthData> Register(User user)
+        public async Task<ServiceResponse<UserAuthData>> Register(User user)
         {
             ServiceResponse<UserAuthData> response = new();
 
-            var usernameExists = GetUser(user.Username);
+            var usernameExists = await GetUser(user.Username);
             if (usernameExists != null)
             {
                 response.Success = false;
@@ -121,10 +121,10 @@ namespace NewsAppNet.Services
 
         // Checks if users password provided in login attempt 
         // is the same as the users password stored in database
-        public bool VerifyPasswordLogin(User loginUser)
+        public async Task<bool> VerifyPasswordLogin(User loginUser)
         {
             // Get actual user from database
-            var user = userRepository.GetSingle(u => u.Username == loginUser.Username);
+            var user = await userRepository.GetSingle(u => u.Username == loginUser.Username);
 
             // Compare passwords
             return VerifyPassword(loginUser.Password, user.Password);
@@ -135,15 +135,15 @@ namespace NewsAppNet.Services
             return Crypto.HashPassword(password);
         }
 
-        public User? GetUser(int userId)
+        public async Task<User?> GetUser(int userId)
         {
-            var user = userRepository.GetSingle(userId);
+            var user = await userRepository.GetSingle(userId);
             return user;
         }
 
-        public User? GetUser(string username)
+        public async Task<User?> GetUser(string username)
         {
-            var user = userRepository.GetSingle(u => u.Username == username);
+            var user = await userRepository.GetSingle(u => u.Username == username);
             return user;
         }
 
@@ -177,9 +177,9 @@ namespace NewsAppNet.Services
             };
         }
 
-        public UserAuthData GetUserAuthData(int userId)
+        public async Task<UserAuthData> GetUserAuthData(int userId)
         {
-            User user = userRepository.GetSingle(userId);
+            User user = await userRepository.GetSingle(userId);
             return GetUserAuthData(user);
         }
 
@@ -204,11 +204,11 @@ namespace NewsAppNet.Services
         //      UserDeleteId:   id of user that is to be deleted
         //      UserRequestId:  id of user calling the method
         // Only admins are allowed this action
-        public ServiceResponse<UserView> DeleteUser(int userDeleteId, int userRequestId)
+        public async Task<ServiceResponse<UserView>> DeleteUser(int userDeleteId, int userRequestId)
         {
             ServiceResponse<UserView> response = new();
 
-            var requestUser = GetUser(userRequestId);
+            var requestUser = await GetUser(userRequestId);
             if (requestUser == null)
             {
                 response.Success = false;
@@ -222,7 +222,7 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            var subjectUser = GetUser(userDeleteId);
+            var subjectUser = await GetUser(userDeleteId);
             if (subjectUser == null)
             {
                 response.Success = false;
@@ -258,11 +258,11 @@ namespace NewsAppNet.Services
         //      UserRestoreId:  id of user that is to be restored
         //      UserRequestId:  id of user calling the method
         // Only admins are allowed this action
-        public ServiceResponse<UserView> RestoreUser(int userRestoreId, int userRequestId)
+        public async Task<ServiceResponse<UserView>> RestoreUser(int userRestoreId, int userRequestId)
         {
             ServiceResponse<UserView> response = new();
 
-            var requestUser = GetUser(userRequestId);
+            var requestUser = await GetUser(userRequestId);
             if (requestUser == null)
             {
                 response.Success = false;
@@ -276,7 +276,7 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            var subjectUser = GetUser(userRestoreId);
+            var subjectUser = await GetUser(userRestoreId);
             if (subjectUser == null)
             {
                 response.Success = false;

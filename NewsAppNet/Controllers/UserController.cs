@@ -43,17 +43,17 @@ namespace NewsAppNet.Controllers
 
         // Login using username and password
         [HttpPost("login")]
-        public ActionResult<UserAuthData> Login([FromForm] string username, [FromForm] string password)
+        public async Task<IActionResult> Login([FromForm] string username, [FromForm] string password)
         {
-            ServiceResponse<UserAuthData> serviceResponse = userService.Login(username, password);
+            ServiceResponse<UserAuthData> serviceResponse = await userService.Login(username, password);
 
             return HandleResponse(serviceResponse);
         }
 
         [HttpPost("register")]
-        public ActionResult<UserAuthData> Register([FromForm] User user)
+        public async Task<IActionResult> Register([FromForm] User user)
         {
-            ServiceResponse<UserAuthData> serviceResponse = userService.Register(user);
+            ServiceResponse<UserAuthData> serviceResponse = await userService.Register(user);
 
             return HandleResponse(serviceResponse);
         }
@@ -63,10 +63,10 @@ namespace NewsAppNet.Controllers
         // Authorize attribute ensures that only valid tokens are allowed through.
         [Authorize]
         [HttpPost("status")]
-        public ActionResult<UserAuthData> LoginCheck()
+        public async Task<IActionResult> LoginCheck()
         {
             var userId = GetUserId();
-            ServiceResponse<UserAuthData> serviceResponse = userService.LoginToken(userId);
+            ServiceResponse<UserAuthData> serviceResponse = await userService.LoginToken(userId);
 
             return HandleResponse(serviceResponse);
         }
