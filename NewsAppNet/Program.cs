@@ -16,9 +16,18 @@ var configuration = builder.Configuration;
 
 var docker = (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true");
 
-var connectionString = configuration.GetConnectionString("NewsAppDb");
-if(!docker) connectionString = configuration.GetConnectionString("NotDocker");
-builder.Services.AddDbContext<NewsAppDbContext>(x => x.UseSqlServer(connectionString));
+string connectionString;
+
+if (docker)
+{
+    connectionString = configuration.GetConnectionString("NewsAppDb");
+    builder.Services.AddDbContext<NewsAppDbContext>(x => x.UseSqlServer(connectionString));
+}
+else
+{
+    connectionString = configuration.GetConnectionString("Sqlite");
+    builder.Services.AddDbContext<SqliteDbContext>(x => x.UseSqlite(connectionString));
+}
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -68,7 +77,7 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
-DatabaseManagementService.MigrationInitialisation(app);
+DatabaseManagementService.MigrationInitialisation(app, docker);
 
 app.UseCors("MyAllowAllOrigins");
 
