@@ -2,7 +2,7 @@
 
 namespace NewsAppNet.Data.Repositories.Interfaces
 {
-    public interface ICommentRepository : ICommentReplyRepository<Comment>
+    public interface ICommentRepository : IEntityBaseRepository<Comment>
     {
 
     }

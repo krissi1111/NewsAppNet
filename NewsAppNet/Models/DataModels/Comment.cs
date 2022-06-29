@@ -2,16 +2,17 @@
 
 namespace NewsAppNet.Models.DataModels
 {
-    public class Comment : ICommentReply
+    public class Comment : IEntityBase
     {
         public int Id { get; set; }
         public int NewsItemId { get; set; }
         public NewsItem? NewsItem { get; set; }
         public int UserId { get; set; }
-        public User? User { get; set; }
+        public ApplicationUser? User { get; set; }
         public string Text { get; set; } = string.Empty;
         public DateTime Date { get; set; } = DateTime.Now;
-        public IList<Reply>? Replies { get; set; }
-        public bool IsDeleted { get; set; } = false;
+        public bool TopLevelComment { get; set; } = true;
+        public int? ParentId { get; set; }
+        public IEnumerable<Comment>? Replies { get; set; }
     }
 }

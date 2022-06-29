@@ -1,7 +1,8 @@
-﻿using NewsAppNet.Data.Repositories.Interfaces;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
+using NewsAppNet.Data.Repositories.Interfaces;
 using NewsAppNet.Models.DataModels;
-using NewsAppNet.Models.DataModels.Interfaces;
-using NewsAppNet.Models.ViewModels;
+using NewsAppNet.Models.DTOs;
 using NewsAppNet.Services.Interfaces;
 
 namespace NewsAppNet.Services
@@ -9,164 +10,40 @@ namespace NewsAppNet.Services
     public class CommentReplyService : ICommentReplyService
     {
         readonly ICommentRepository commentRepository;
-        readonly IReplyRepository replyRepository;
-        readonly IUserService userService;
-        readonly INewsItemRepository newsItemRepository;
-
+        readonly UserManager<ApplicationUser> userManager;
+        readonly IMapper mapper;
         public CommentReplyService(
             ICommentRepository commentRepository, 
-            IReplyRepository replyRepository,
-            IUserService userService,
-            INewsItemRepository newsItemRepository
+            UserManager<ApplicationUser> userManager,
+            IMapper mapper
             )
         {
             this.commentRepository = commentRepository;
-            this.replyRepository = replyRepository;
-            this.userService = userService;
-            this.newsItemRepository = newsItemRepository;
+            this.userManager = userManager;
+            this.mapper = mapper;
         }
 
         // Returns all comments for given news item.
-        public async Task<IEnumerable<Comment>> GetComments(int newsId)
+        public async Task<ServiceResponse<List<CommentDTO>>> GetComments(int newsId)
         {
-            return await commentRepository.GetMany(t => t.NewsItemId == newsId);
-        }
+            ServiceResponse<List<CommentDTO>> response = new();
 
-        // Returns all replies for given news item.
-        public async Task<IEnumerable<Reply>> GetReplies(int newsId)
-        {
-            return await replyRepository.GetMany(t => t.NewsItemId == newsId);
-        }
+            var comments = await commentRepository.GetManyInclude(t => t.NewsItemId == newsId, t => t.Replies, t => t.User);
+            
+            var commentList = mapper.Map<List<CommentDTO>>(comments);
 
-        // Returns all comments and replies for given news item.
-        // Replies are grouped under parent comment.
-        public async Task<ServiceResponse<List<CommentView>>> GetCommentList(int newsId, int userId)
-        {
-            ServiceResponse<List<CommentView>> response = new();
-
-            var user = await userService.GetUser(userId);
-            var isAdmin = false;
-
-            if (user != null)
-            {
-                if (user.UserType == "Admin") isAdmin = true;
-            }
-
-            if (!newsItemRepository.NewsItemExists(newsId))
-            {
-                response.Success = false;
-                response.Message = "News item not found";
-                return response;
-            }
-
-            // Get all comments and replies
-            var comments = await GetComments(newsId);
-            var replies = await GetReplies(newsId);
-
-            // Go through each comment
-            var commentViews = new List<CommentView>();
-            foreach (var comment in comments)
-            {
-                // Find replies belonging to comment
-                var replyViews = new List<CommentView>();
-                foreach(var reply in replies)
-                {
-                    if (reply.CommentId != comment.Id) continue;
-                    var replyView = new CommentView(reply);
-
-                    var userR = await userService.GetUser(reply.UserId);
-
-                    // Checks if reply soft deleted
-                    if (reply.IsDeleted)
-                    {
-                        // An admin will be able to see replies 
-                        // even if soft deleted
-                        if (!isAdmin)
-                        {
-                            // Regular users will not be able to see soft deleted replies.
-                            // Instead they will just see "(Reply deleted)" as user name
-                            // and no comment text.
-                            string replyDeleted = "(Reply deleted)";
-                            replyView.UserFullName = replyDeleted;
-                            replyView.Text = string.Empty;
-                        }
-                        else
-                        {
-                            string fullName = "(User deleted)";
-                            if (userR != null)
-                            {
-                                if (!userR.IsDeleted) fullName = string.Format("{0} {1}", userR.FirstName, userR.LastName);
-                            }
-                            replyView.UserFullName = fullName;
-                        }
-                    }
-                    else
-                    {
-                        string fullNameR = "(User deleted)";
-                        if (userR != null)
-                        {
-                            if (!userR.IsDeleted) fullNameR = string.Format("{0} {1}", userR.FirstName, userR.LastName);
-                        }
-                        replyView.UserFullName = fullNameR;
-                    }
-
-                    replyViews.Add(replyView);
-                }
-                
-                var commentView = new CommentView(comment);
-
-                var userC = await userService.GetUser(comment.UserId);
-
-                // Checks if comment soft deleted
-                if (comment.IsDeleted)
-                {
-                    // An admin will be able to see comments 
-                    // even if soft deleted
-                    if (!isAdmin)
-                    {
-                        // Regular users will not be able to see soft deleted comments.
-                        // Instead they will just see "(Comment deleted)" as user name
-                        // and no comment text.
-                        string commentDeleted = "(Comment deleted)";
-                        commentView.UserFullName = commentDeleted;
-                        commentView.Text = string.Empty;
-                    }
-                    else
-                    {
-                        string fullName = "(User deleted)";
-                        if (userC != null)
-                        {
-                            if (!userC.IsDeleted) fullName = string.Format("{0} {1}", userC.FirstName, userC.LastName);
-                        }
-                        commentView.UserFullName = fullName;
-                        commentView.Text = "(Comment deleted) " + commentView.Text;
-                    }
-                }
-                else
-                {
-                    string fullName = "(User deleted)";
-                    if (userC != null)
-                    {
-                        if(!userC.IsDeleted) fullName = string.Format("{0} {1}", userC.FirstName, userC.LastName);
-                    }
-                    commentView.UserFullName = fullName;
-                }
-                commentView.Replies = replyViews;
-
-                commentViews.Add(commentView);
-            }
-
+            response.Data = commentList;
             response.Success = true;
-            response.Data = commentViews;
 
             return response;
         }
 
-        public async Task<ServiceResponse<CommentView>> AddComment(int newsId, int userId, string commentText)
+        public async Task<ServiceResponse<CommentDTO>> AddComment(int newsId, int userId, string commentText)
         {
-            ServiceResponse<CommentView> response = new();
+            ServiceResponse<CommentDTO> response = new();
 
-            var user = userService.GetUser(userId);
+            //var user = userService.GetUser(userId);
+            var user = await userManager.FindByIdAsync(userId.ToString());
             if (user == null)
             {
                 response.Success = false;
@@ -191,15 +68,17 @@ namespace NewsAppNet.Services
             commentRepository.Add(comment);
             commentRepository.Commit();
 
+            var commentDTO = mapper.Map<CommentDTO>(comment);
+
             response.Success = true;
-            response.Data = new CommentView(comment);
+            response.Data = commentDTO;
 
             return response;
         }
 
-        public async Task<ServiceResponse<CommentView>> AddReply(int newsId, int userId, int commentId, string commentText)
+        /*public async Task<ServiceResponse<CommentDTO>> AddReply(int newsId, int userId, int commentId, string commentText)
         {
-            ServiceResponse<CommentView> response = new();
+            ServiceResponse<CommentDTO> response = new();
 
             var user = userService.GetUser(userId);
             if (user == null)
@@ -227,18 +106,45 @@ namespace NewsAppNet.Services
             replyRepository.Add(reply);
             replyRepository.Commit();
 
+            var replyDTO = mapper.Map<CommentDTO>(reply);
+
             response.Success = true;
-            response.Data = new CommentView(reply);
+            response.Data = replyDTO;
+
+            return response;
+        }
+        */
+        // Used for editing already existing comments.
+        // Users can only edit their own comments.
+        // Admin can edit any comment.
+
+        public async Task<ServiceResponse<CommentDTO>> AddReply(int newsId, int userId, int parentId, string commentText)
+        {
+            ServiceResponse<CommentDTO> response = new();
+
+            Comment comment = new()
+            {
+                NewsItemId = newsId,
+                UserId = userId,
+                ParentId = parentId,
+                Text = commentText,
+                TopLevelComment = false
+            };
+
+            commentRepository.Add(comment);
+            commentRepository.Commit();
+
+            var commentDTO = mapper.Map<CommentDTO>(comment);
+
+            response.Success = true;
+            response.Data = commentDTO;
 
             return response;
         }
 
-        // Used for editing already existing comments.
-        // Users can only edit their own comments.
-        // Admin can edit any comment.
-        public async Task<ServiceResponse<CommentView>> EditComment(int commentId, int userId, string commentText)
+        public async Task<ServiceResponse<CommentDTO>> EditComment(int commentId, int userId, string commentText)
         {
-            ServiceResponse<CommentView> response = new();
+            ServiceResponse<CommentDTO> response = new();
 
             var comment = await commentRepository.GetSingle(commentId);
             if (comment == null)
@@ -248,7 +154,8 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            var user = await userService.GetUser(userId);
+            //var user = await userService.GetUser(userId);
+            var user = await userManager.FindByIdAsync(userId.ToString());
             if (user == null)
             {
                 response.Success = false;
@@ -257,7 +164,7 @@ namespace NewsAppNet.Services
             }
             // Users can only edit their own comments
             // Admin can edit any comment
-            else if(!(user.Id == comment.UserId || user.UserType == "Admin"))
+            else if(!(user.Id == comment.UserId/* || user.UserType == "Admin"*/))
             {
                 response.Success = false;
                 response.Message = "User is not authorized to perform this action";
@@ -275,18 +182,20 @@ namespace NewsAppNet.Services
             commentRepository.Update(comment);
             commentRepository.Commit();
 
+            var commentDTO = mapper.Map<CommentDTO>(comment);
+
             response.Success = true;
-            response.Data = new CommentView(comment);
+            response.Data = commentDTO;
 
             return response;
         }
-
+        /*
         // Used for editing already existing replies.
         // Users can only edit their own replies.
         // Admin can edit any reply.
-        public async Task<ServiceResponse<CommentView>> EditReply(int replyId, int userId, string commentText)
+        public async Task<ServiceResponse<CommentDTO>> EditReply(int replyId, int userId, string commentText)
         {
-            ServiceResponse<CommentView> response = new();
+            ServiceResponse<CommentDTO> response = new();
 
             var reply = await replyRepository.GetSingle(replyId);
             if (reply == null)
@@ -323,18 +232,20 @@ namespace NewsAppNet.Services
             replyRepository.Update(reply);
             replyRepository.Commit();
 
+            var replyDTO = mapper.Map<CommentDTO>(reply);
+
             response.Success = true;
-            response.Data = new CommentView(reply);
+            response.Data = replyDTO;
 
             return response;
         }
-
+        */
         // Used for deleting comments.
         // Users can only delete their own comments.
         // Admin can delete any comment.
-        public async Task<ServiceResponse<CommentView>> DeleteComment(int commentId, int userId)
+        public async Task<ServiceResponse<CommentDTO>> DeleteComment(int commentId, int userId)
         {
-            ServiceResponse<CommentView> response = new();
+            ServiceResponse<CommentDTO> response = new();
 
             var comment = await commentRepository.GetSingle(commentId);
             if (comment == null)
@@ -344,7 +255,8 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            var user = await userService.GetUser(userId);
+            //var user = await userService.GetUser(userId);
+            var user = await userManager.FindByIdAsync(userId.ToString());
             if (user == null)
             {
                 response.Success = false;
@@ -353,35 +265,16 @@ namespace NewsAppNet.Services
             }
             // Users can only delete their own comments
             // Admin can delete any comment
-            else if (!(user.Id == comment.UserId || user.UserType == "Admin"))
+            else if (!(user.Id == comment.UserId /*|| user.UserType == "Admin"*/))
             {
                 response.Success = false;
                 response.Message = "User is not authorized to perform this action";
                 return response;
             }
 
-            /*
-            // Need to manually delete replies associated with this comment
-            // because of foreign key relationships
-            var replies = GetReplies(comment.NewsItemId).ToList();
-            var replyViews = new List<CommentView>();
-            foreach (Reply reply in replies)
-            {
-                // "replies" includes all replies for the comments news item
-                // Only deletes replies associated with comment in question
-                if (reply.CommentId == commentId)
-                {
-                    replyViews.Add(new CommentView(reply));
-                    replyRepository.Delete(reply);
-                }
-            }
-            replyRepository.Commit();
+            var commentDTO = mapper.Map<CommentDTO>(comment);
 
-            */
-
-            var commentView = new CommentView(comment);
-            //commentView.Replies = replyViews;
-            response.Data = commentView;
+            response.Data = commentDTO;
 
             commentRepository.Delete(comment);
             commentRepository.Commit();
@@ -390,13 +283,13 @@ namespace NewsAppNet.Services
 
             return response;
         }
-
+        /*
         // Used for deleting replies.
         // Users can only delete their own replies.
         // Admin can delete any reply.
-        public async Task<ServiceResponse<CommentView>> DeleteReply(int replyId, int userId)
+        public async Task<ServiceResponse<CommentDTO>> DeleteReply(int replyId, int userId)
         {
-            ServiceResponse<CommentView> response = new();
+            ServiceResponse<CommentDTO> response = new();
 
             var reply = await replyRepository.GetSingle(replyId);
             if (reply == null)
@@ -422,7 +315,7 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            response.Data = new CommentView(reply);
+            response.Data = mapper.Map<CommentDTO>(reply);
 
             replyRepository.Delete(reply);
             replyRepository.Commit();
@@ -431,11 +324,11 @@ namespace NewsAppNet.Services
 
             return response;
         }
-
+        */
         // Used for restoring soft deleted comments
-        public async Task<ServiceResponse<CommentView>> RestoreComment(int commentId, int userId)
+        public async Task<ServiceResponse<CommentDTO>> RestoreComment(int commentId, int userId)
         {
-            ServiceResponse<CommentView> response = new();
+            ServiceResponse<CommentDTO> response = new();
 
             var comment = await commentRepository.GetSingle(commentId);
             if (comment == null)
@@ -444,43 +337,37 @@ namespace NewsAppNet.Services
                 response.Message = string.Format("Comment {0} not found", commentId);
                 return response;
             }
-            else if (!comment.IsDeleted)
-            {
-                response.Success = false;
-                response.Message = string.Format("Comment {0} is not soft deleted", commentId);
-                return response;
-            }
 
-            var currentUser = await userService.GetUser(userId);
+            //var currentUser = await userService.GetUser(userId);
+            var currentUser = await userManager.FindByIdAsync(userId.ToString());
             if (currentUser == null)
             {
                 response.Success = false;
                 response.Message = "This action is only for admins";
                 return response;
             }
-            else if (currentUser.UserType != "Admin")
+            /*else if (currentUser.UserType != "Admin")
             {
                 response.Success = false;
                 response.Message = "This action is only for admins";
                 return response;
-            }
+            }*/
 
-            comment.IsDeleted = false;
             commentRepository.Update(comment);
             commentRepository.Commit();
 
-            var commentView = new CommentView(comment);
+            var commentDTO = mapper.Map<CommentDTO>(comment);
 
             response.Success = true;
-            response.Data = commentView;
+            response.Data = commentDTO;
 
             return response;
         }
-
+        /*
         // Used for restoring soft deleted replies
-        public async Task<ServiceResponse<CommentView>> RestoreReply(int replyId, int userId)
+        public async Task<ServiceResponse<CommentDTO>> RestoreReply(int replyId, int userId)
         {
-            ServiceResponse<CommentView> response = new();
+            ServiceResponse<CommentDTO> response = new();
 
             var reply = await replyRepository.GetSingle(replyId);
             if (reply == null)
@@ -514,12 +401,13 @@ namespace NewsAppNet.Services
             replyRepository.Update(reply);
             replyRepository.Commit();
 
-            var replyView = new CommentView(reply);
+            var replyView = mapper.Map<CommentDTO>(reply);
 
             response.Success = true;
             response.Data = replyView;
 
             return response;
         }
+        */
     }
 }
