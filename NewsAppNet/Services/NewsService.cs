@@ -1,7 +1,9 @@
-﻿using NewsAppNet.Data.Repositories.Interfaces;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
+using NewsAppNet.Data.Repositories.Interfaces;
 using NewsAppNet.Models.DataModels;
 using NewsAppNet.Models.DataModels.Interfaces;
-using NewsAppNet.Models.ViewModels;
+using NewsAppNet.Models.DTOs;
 using NewsAppNet.Services.Interfaces;
 
 namespace NewsAppNet.Services
@@ -9,28 +11,25 @@ namespace NewsAppNet.Services
     public class NewsService : INewsService
     {
         readonly INewsItemRepository newsItemRepository;
-        readonly ICommentRepository commentRepository;
-        readonly IFavoriteRepository favoriteRepository;
-        readonly IUserService userService;
+        readonly UserManager<ApplicationUser> userManager;
         readonly INewsFeedService newsFeedService;
         readonly INewsFeedRepository newsFeedRepository;
+        readonly IMapper mapper;
 
         public NewsService(
             INewsItemRepository newsItemRepository,
-            ICommentRepository commentRepository,
-            IFavoriteRepository favoriteRepository,
-            ICommentReplyService commentReplyService,
-            IUserService userService,
+            UserManager<ApplicationUser> userManager,
+            //IUserService userService,
             INewsFeedService newsFeedService,
-            INewsFeedRepository newsFeedRepository
+            INewsFeedRepository newsFeedRepository,
+            IMapper mapper
             )
         {
             this.newsItemRepository = newsItemRepository;
-            this.commentRepository = commentRepository;
-            this.favoriteRepository = favoriteRepository;
-            this.userService = userService;
+            this.userManager = userManager;
             this.newsFeedService = newsFeedService;
             this.newsFeedRepository = newsFeedRepository;
+            this.mapper = mapper;
         }
 
         public bool NewsItemExists(int newsId)
@@ -39,30 +38,27 @@ namespace NewsAppNet.Services
         }
 
         // Gets all news items and returns, ordered by most recent
-        public async Task<ServiceResponse<List<NewsItemView>>> GetNewsAll()
+        public async Task<ServiceResponse<List<NewsItemDTO>>> GetNewsAll()
         {
-            ServiceResponse<List<NewsItemView>> response = new();
+            ServiceResponse<List<NewsItemDTO>> response = new();
 
             // Get all news items, ordered by most recent
-            IEnumerable<NewsItem> news = await newsItemRepository.GetAllInclude(n => n.NewsFeedModel);
+            //IEnumerable<NewsItem> news = await newsItemRepository.GetAllInclude(n => n.Comments, n => n.Replies);
+            var news = await newsItemRepository.GetNewsIncludeAll();
+            
             news.OrderByDescending(s => s.Date);
+             
+            var newsList = mapper.Map<List<NewsItemDTO>>(news);
 
-            List<NewsItemView> newsViews = new();
-            foreach (NewsItem item in news)
-            {
-                // Skips news item if soft deleted
-                if(!item.IsDeleted) newsViews.Add(new NewsItemView(item));
-            }
-
-            response.Data = newsViews;
+            response.Data = newsList;
             response.Success = true;
             return response;
         }
 
         // Get specific news item
-        public async Task<ServiceResponse<NewsItemView>> GetNews(int Id)
+        public async Task<ServiceResponse<NewsItemDTO>> GetNews(int Id)
         {
-            ServiceResponse<NewsItemView> response = new();
+            ServiceResponse<NewsItemDTO> response = new();
 
             if (!NewsItemExists(Id))
             {
@@ -79,18 +75,16 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            NewsItemView newsItemView = new(newsItem);
-
-            response.Data = newsItemView;
+            response.Data = mapper.Map<NewsItemDTO>(newsItem);
             response.Success= true;
 
             return response;
         }
 
         // Returns news items based on search criteria
-        public async Task<ServiceResponse<List<NewsItemView>>> GetNewsSearch(Search search)
+        public async Task<ServiceResponse<List<NewsItemDTO>>> GetNewsSearch(Search search)
         {
-            ServiceResponse<List<NewsItemView>> response = new();
+            ServiceResponse<List<NewsItemDTO>> response = new();
 
             var title = search.Title;
             var summary = search.Summary;
@@ -111,7 +105,7 @@ namespace NewsAppNet.Services
                 }
             }
 
-            IEnumerable<NewsItem> news = await newsItemRepository.GetAll();
+            IEnumerable<NewsItem> news = await newsItemRepository.GetNewsIncludeAll();
 
             if (newsFeedIds != null)
             {
@@ -145,13 +139,8 @@ namespace NewsAppNet.Services
             }
 
             news = news.OrderByDescending(s => s.Date);
-
-            List<NewsItemView> newsViews = new();
-            foreach (NewsItem item in news)
-            {
-                // Skips news item if soft deleted
-                if(!item.IsDeleted) newsViews.Add(new NewsItemView(item));
-            }
+            
+            var newsViews = mapper.Map<List<NewsItemDTO>>(news);
 
             response.Success = true;
             response.Data = newsViews;
@@ -160,44 +149,46 @@ namespace NewsAppNet.Services
         }
 
         // Adds new news items from all news feeds
-        public async Task<ServiceResponse<List<NewsItemView>>> AddNews(int userId)
+        public async Task<ServiceResponse<List<NewsItemDTO>>> AddNews(int userId)
         {
-            ServiceResponse<List<NewsItemView>> response = new();
+            ServiceResponse<List<NewsItemDTO>> response = new();
 
-            var currentUser = await userService.GetUser(userId);
-            if(currentUser == null)
+            //var currentUser = await userService.GetUser(userId);
+            var currentUser = await userManager.FindByIdAsync(userId.ToString());
+            if (currentUser == null)
             {
                 response.Success = false;
                 response.Message = "This action is only for admins";
             }
-            else if (currentUser.UserType != "Admin")
+            /*else if (currentUser.UserType != "Admin")
             {
                 response.Success = false;
                 response.Message = "This action is only for admins";
-            }
+            }*/
 
             var newsFeeds = await newsFeedRepository.GetAll();
             var newsFeedIds = newsFeeds.Select(feed => feed.Id);
             return await AddNews(userId, newsFeedIds);
         }
 
-        public async Task<ServiceResponse<List<NewsItemView>>> AddNews(int userId, IEnumerable<int> newsFeedIds)
+        public async Task<ServiceResponse<List<NewsItemDTO>>> AddNews(int userId, IEnumerable<int> newsFeedIds)
         {
-            ServiceResponse<List<NewsItemView>> response = new();
+            ServiceResponse<List<NewsItemDTO>> response = new();
 
-            var currentUser = await userService.GetUser(userId);
+            //var currentUser = await userService.GetUser(userId);
+            var currentUser = await userManager.FindByIdAsync(userId.ToString());
             if (currentUser == null)
             {
                 response.Success = false;
                 response.Message = "This action is only for admins";
             }
-            else if (currentUser.UserType != "Admin")
+            /*else if (currentUser.UserType != "Admin")
             {
                 response.Success = false;
                 response.Message = "This action is only for admins";
-            }
+            }*/
 
-            List<NewsItemView> itemViews = new();
+            List<NewsItemDTO> itemDTOs = new();
             IEnumerable<NewsFeedModel> newsFeeds;
 
             newsFeeds = await newsFeedRepository.GetMany(newsFeedIds);
@@ -209,35 +200,36 @@ namespace NewsAppNet.Services
                 {
                     if (newsItemRepository.NewsItemExists(item.Link)) continue;
                     newsItemRepository.Add(item);
-                    itemViews.Add(new NewsItemView(item));
                 }
+                itemDTOs.AddRange(mapper.Map<List<NewsItemDTO>>(items));
             }
             newsItemRepository.Commit();
 
             response.Success = true;
-            response.Data = itemViews;
+            response.Data = itemDTOs;
             return response;
         }
 
         // Marks a single news item as deleted (soft delete)
         // Only for admins
-        public async Task<ServiceResponse<NewsItemView>> DeleteNews(int newsId, int userId)
+        public async Task<ServiceResponse<NewsItemDTO>> DeleteNews(int newsId, int userId)
         {
-            ServiceResponse<NewsItemView> response = new();
+            ServiceResponse<NewsItemDTO> response = new();
 
-            var currentUser = await userService.GetUser(userId);
+            //var currentUser = await userService.GetUser(userId);
+            var currentUser = await userManager.FindByIdAsync(userId.ToString());
             if (currentUser == null)
             {
                 response.Success = false;
                 response.Message = "This action is only for admins";
                 return response;
             }
-            else if (currentUser.UserType != "Admin")
+            /*else if (currentUser.UserType != "Admin")
             {
                 response.Success = false;
                 response.Message = "This action is only for admins";
                 return response;
-            }
+            }*/
 
             var news = await newsItemRepository.GetSingle(newsId);
             if(news == null)
@@ -246,69 +238,38 @@ namespace NewsAppNet.Services
                 response.Message = "News item not found";
                 return response;
             }
-            var newsItemView = new NewsItemView(news);
+            var newsItem = mapper.Map<NewsItemDTO>(news);
 
-            // Need to manually delete comments and replies 
-            // because of foreign key relationships
-            /*var comments = commentReplyService.GetComments(newsId);
-            foreach (Comment comment in comments)
-            {
-                commentReplyService.DeleteComment(comment.Id, userId);
-            }
-            */
             newsItemRepository.Delete(news);
             newsItemRepository.Commit();
 
             response.Success = true;
-            response.Data = newsItemView;
+            response.Data = newsItem;
 
             return response;
         }
 
         // Returns most popular news items based on number of comments or favorites
-        public async Task<ServiceResponse<Dictionary<string, List<NewsItemView>>>> GetPopularNews(int amount = 5)
+        public async Task<ServiceResponse<Dictionary<string, List<NewsItemDTO>>>> GetPopularNews(int amount = 5)
         {
-            ServiceResponse<Dictionary<string, List<NewsItemView>>> response = new();
-
-            // Get most favorited news items
-            var popFav = await favoriteRepository.GetAll();
-            var popularFavorites = popFav
-                .GroupBy(t => t.NewsItemId)
-                .OrderByDescending(t => t.Count())
-                .Select(t => t.Key)
-                .Take(amount);
-
-            // Get most commented news items
-            var popCom = await commentRepository.GetAll();
-            var popularComments = popCom
-                .GroupBy(t => t.NewsItemId)
-                .OrderByDescending(t => t.Count())
-                .Select(t => t.Key)
-                .Take(amount);
+            ServiceResponse<Dictionary<string, List<NewsItemDTO>>> response = new();
 
             //var newsItemsFav = await newsItemRepository.GetManyOrdered(popularFavorites);
-            var newsItemsFav = await newsItemRepository.GetAllInclude(n => n.Favorites);
-            var newsItemsCom = await newsItemRepository.GetAllInclude(n => n.Comments);
+            //var newsItemsFav = await newsItemRepository.GetAllInclude(n => n.Favorites);
+            //var newsItemsCom = await newsItemRepository.GetAllInclude(n => n.Comments, n => n.Replies);
+            //var newsItems = await newsItemRepository.GetNewsIncludeAll();
+            var newsItems = await newsItemRepository.GetNewsIncludeAll();
 
-            var newsIF = newsItemsFav.OrderByDescending(n => n.Favorites.Count()).Take(5);
-            var newsIC = newsItemsCom.OrderByDescending(n => n.Comments.Count()).Take(5);
+            var newsIF = newsItems.OrderByDescending(n => n.Favorites.Count()).Take(5);
+            var newsIC = newsItems.OrderByDescending(n => n.Comments.Count()).Take(5);
 
-            var newsViewFav = new List<NewsItemView>();
-            foreach (NewsItem item in newsIF)
+            var newsDTOFav = mapper.Map<List<NewsItemDTO>>(newsIF);
+            var newsDTOCom = mapper.Map<List<NewsItemDTO>>(newsIC);
+
+            var dict = new Dictionary<string, List<NewsItemDTO>>
             {
-                newsViewFav.Add(new NewsItemView(item));
-            }
-
-            var newsViewCom = new List<NewsItemView>();
-            foreach (NewsItem item in newsIC)
-            {
-                newsViewCom.Add(new NewsItemView(item));
-            }
-
-            var dict = new Dictionary<string, List<NewsItemView>>
-            {
-                { "favorites", newsViewFav },
-                { "comments", newsViewCom }
+                { "favorites", newsDTOFav },
+                { "comments", newsDTOCom }
             };
 
             response.Success = true;
@@ -318,9 +279,9 @@ namespace NewsAppNet.Services
         }
 
         // Used for restoring soft deleted news items
-        public async Task<ServiceResponse<NewsItemView>> RestoreNews(int newsId, int userId)
+        public async Task<ServiceResponse<NewsItemDTO>> RestoreNews(int newsId, int userId)
         {
-            ServiceResponse<NewsItemView> response = new();
+            ServiceResponse<NewsItemDTO> response = new();
 
             var news = await newsItemRepository.GetSingle(newsId);
             if (news == null)
@@ -336,28 +297,29 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            var currentUser = await userService.GetUser(userId);
+            //var currentUser = await userService.GetUser(userId);
+            var currentUser = await userManager.FindByIdAsync(userId.ToString());
             if (currentUser == null)
             {
                 response.Success = false;
                 response.Message = "This action is only for admins";
                 return response;
             }
-            else if (currentUser.UserType != "Admin")
+            /*else if (currentUser.UserType != "Admin")
             {
                 response.Success = false;
                 response.Message = "This action is only for admins";
                 return response;
-            }
+            }*/
 
             news.IsDeleted = false;
             newsItemRepository.Update(news);
             newsItemRepository.Commit();
 
-            var newsView = new NewsItemView(news);
+            var newsItem = mapper.Map<NewsItemDTO>(news);
 
             response.Success = true;
-            response.Data = newsView;
+            response.Data = newsItem;
 
             return response;
         }
