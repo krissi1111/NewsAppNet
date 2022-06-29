@@ -32,7 +32,6 @@ namespace NewsAppNet.Models.DataModels
         public string Password { get; set; } = string.Empty;
         public string UserType { get; set; } = string.Empty;
         public IList<Comment>? Comments { get; set; }
-        public IList<Reply>? Replies { get; set; }
         public IList<Favorite>? Favorites { get; set; }
         public bool IsDeleted { get; set; } = false;
     }

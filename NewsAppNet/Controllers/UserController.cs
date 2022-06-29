@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NewsAppNet.Models.DataModels;
-using NewsAppNet.Models.DataModels.Interfaces;
+using NewsAppNet.Models.DTOs;
 using NewsAppNet.Services.Interfaces;
 
 namespace NewsAppNet.Controllers
@@ -10,6 +11,7 @@ namespace NewsAppNet.Controllers
     [Route("[controller]")]
     public class UserController : ControllerBase
     {
+        readonly UserManager<ApplicationUser> userManager;
         readonly IUserService userService;
 
         public UserController(
@@ -19,56 +21,59 @@ namespace NewsAppNet.Controllers
             this.userService = userService;
         }
 
-        public int GetUserId()
+        [HttpPost("Login")]
+        public async Task<IActionResult> Login([FromBody] UserLogin userLogin)
         {
-            int userId = -1;
+            if (!ModelState.IsValid || userLogin == null)
+            {
+                return new BadRequestObjectResult(new { Message = "User Registration Failed" });
+            }
+
+            var response = await userService.Login(userLogin);
+
+            if (!response.Success)
+            {
+                return new BadRequestObjectResult(new { response.Message });
+            }
+
+            return Ok(response.Data);
+        }
+
+        [Authorize]
+        [HttpPost("LoginToken")]
+        public async Task<IActionResult> LoginToken()
+        {
+            string username = "";
             if (HttpContext.User.Identity.Name != null)
             {
-                userId = Int32.Parse(HttpContext.User.Identity.Name);
+                username = HttpContext.User.Identity.Name;
             }
-            return userId;
-        }
+            var response = await userService.LoginToken(username);
 
-        private ActionResult HandleResponse(IResponse serviceResponse)
-        {
-            if (!serviceResponse.Success)
+            if (!response.Success)
             {
-                return BadRequest(serviceResponse);
+                return new BadRequestObjectResult(new { response.Message });
             }
-            else
+
+            return Ok(response.Data);
+        }
+
+        [HttpPost("Register")]
+        public async Task<IActionResult> Register([FromBody] UserRegister userRegister)
+        {
+            if (!ModelState.IsValid || userRegister == null)
             {
-                return Ok(serviceResponse);
+                return new BadRequestObjectResult(new { Message = "User Registration Failed" });
             }
-        }
 
-        // Login using username and password
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromForm] string username, [FromForm] string password)
-        {
-            ServiceResponse<UserAuthData> serviceResponse = await userService.Login(username, password);
+            var response = await userService.Register(userRegister);
 
-            return HandleResponse(serviceResponse);
-        }
+            if (!response.Success)
+            {
+                return new BadRequestObjectResult(new { response.Message });
+            }
 
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromForm] User user)
-        {
-            ServiceResponse<UserAuthData> serviceResponse = await userService.Register(user);
-
-            return HandleResponse(serviceResponse);
-        }
-
-        // Checks if login token is still valid.
-        // If so, returns new token with extended lifespan.
-        // Authorize attribute ensures that only valid tokens are allowed through.
-        [Authorize]
-        [HttpPost("status")]
-        public async Task<IActionResult> LoginCheck()
-        {
-            var userId = GetUserId();
-            ServiceResponse<UserAuthData> serviceResponse = await userService.LoginToken(userId);
-
-            return HandleResponse(serviceResponse);
+            return Ok(response.Data);
         }
     }
 }

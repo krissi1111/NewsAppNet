@@ -1,5 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using NewsAppNet.Data;
+using NewsAppNet.Models.DataModels;
 
 namespace NewsAppNet.Services
 {
@@ -22,8 +24,10 @@ namespace NewsAppNet.Services
                     dbContext = serviceScope.ServiceProvider.GetService<NewsAppDbContext>();
                     dbContext.Database.EnsureCreated();
                 }
-                
-                DbSeedService seedService = new(dbContext);
+                UserManager<ApplicationUser> userManager = serviceScope.ServiceProvider.GetService<UserManager<ApplicationUser>>();
+                RoleManager<IdentityRole<int>> roleManager = serviceScope.ServiceProvider.GetService<RoleManager<IdentityRole<int>>>();
+
+                DbSeedService seedService = new(dbContext, userManager, roleManager);
                 seedService.SeedDb();
             }
         }

@@ -1,4 +1,5 @@
 ﻿using CryptoHelper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NewsAppNet.Data.NewsFeeds.ItemBuilder;
 using NewsAppNet.Models.DataModels;
@@ -11,25 +12,34 @@ namespace NewsAppNet.Services
     public class DbSeedService : IDbSeedService 
     {
         readonly DbContext _dbContext;
+        readonly UserManager<ApplicationUser> userManager;
+        readonly RoleManager<IdentityRole<int>> roleManager;
 
-        public DbSeedService(DbContext dbContext) { 
-            _dbContext = dbContext;
+        public DbSeedService(
+            DbContext dbContext, 
+            UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole<int>> roleManager
+            ) 
+        {
+            this._dbContext = dbContext;
+            this.userManager = userManager;
+            this.roleManager = roleManager;
         }
 
         // Seeds the database with data if it hasn't already been seeded
         // It is assumed that data has already been seeded if user with username "admin" exists
-        public void SeedDb()
+        public async Task SeedDb()
         {
             // Check if "admin" exists
-            var admin = _dbContext.Set<User>().Where(user => user.Username == "admin").FirstOrDefault();
+            //var admin = _dbContext.Set<User>().Where(user => user.Username == "admin").FirstOrDefault();
+            var admin = await userManager.FindByNameAsync("admin");
             // Seed if "admin" doesn't exist
             if (admin == null)
             {
                 SeedNewsFeeds();
                 SeedNewsItem();
-                SeedUser();
+                await SeedUser();
                 SeedComment();
-                SeedReply();
                 SeedFavorite();
             }
         }
@@ -170,8 +180,63 @@ namespace NewsAppNet.Services
             else return feeds[newsFeed.FeedName];
         }
 
+
+        async Task SeedUser()
+        {
+            var superAdminRole = new IdentityRole<int>() { Name = "superAdmin" };
+            var adminRole = new IdentityRole<int>() { Name = "admin" };
+
+            await roleManager.CreateAsync(superAdminRole);
+            await roleManager.CreateAsync(adminRole);
+
+            var admin = new ApplicationUser()
+            {
+                UserName = "admin",
+                FirstName = "Super",
+                LastName = "Admin"
+            };
+
+            var password = "Superadmin1";
+            await userManager.CreateAsync(admin, password);
+
+            var user = await userManager.FindByNameAsync("admin");
+            await userManager.AddToRolesAsync(user, new[] { "superAdmin", "admin" });
+
+            List<ApplicationUser> userList = new();
+
+            userList.Add(new ApplicationUser
+            {
+                UserName = "kalli",
+                FirstName = "Karl",
+                LastName = "Arnarsson",
+            });
+            userList.Add(new ApplicationUser
+            {
+                UserName = "jonas",
+                FirstName = "Jónas",
+                LastName = "Þórsson",
+            });
+            userList.Add(new ApplicationUser
+            {
+                UserName = "Sigga",
+                FirstName = "Sigrún",
+                LastName = "Jónsdóttir",
+            });
+            userList.Add(new ApplicationUser
+            {
+                UserName = "örn",
+                FirstName = "Örn",
+                LastName = "Atlason",
+            });
+
+            var userPassword = "Passipassi1";
+            foreach (var u in userList)
+            {
+                await userManager.CreateAsync(u, userPassword);
+            }
+        }
         // Adds special admin user and four general users
-        void SeedUser()
+        /*void SeedUser()
         {
             List<User> userList = new();
 
@@ -223,12 +288,14 @@ namespace NewsAppNet.Services
 
             _dbContext.SaveChanges();
         }
-
+        */
         // Tries to add comments if users and news items exist
         void SeedComment()
         {
             // Get up to 5 users if exist
-            List<User> users = _dbContext.Set<User>().Take(5).ToList();
+            //List<User> users = _dbContext.Set<User>().Take(5).ToList();
+
+            List<ApplicationUser> users = userManager.Users.ToList();
             // Get up to 5 news items if exist
             List<NewsItem> newsItems = _dbContext.Set<NewsItem>().Take(5).ToList();
 
@@ -254,7 +321,7 @@ namespace NewsAppNet.Services
             }
         }
 
-        void SeedReply()
+        /*void SeedReply()
         {
             // Get up to 5 users if exist
             List<User> users = _dbContext.Set<User>().Take(5).ToList();
@@ -283,11 +350,12 @@ namespace NewsAppNet.Services
                 _dbContext.SaveChanges();
             }
         }
-
+        */
         void SeedFavorite()
         {
             // Get up to 5 users if exist
-            List<User> users = _dbContext.Set<User>().Take(5).ToList();
+            //List<User> users = _dbContext.Set<User>().Take(5).ToList();
+            List <ApplicationUser> users = userManager.Users.ToList();
             // Get up to 5 news items if exist
             List<NewsItem> newsItems = _dbContext.Set<NewsItem>().Take(5).ToList();
 

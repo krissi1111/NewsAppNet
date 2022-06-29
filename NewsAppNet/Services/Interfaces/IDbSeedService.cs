@@ -2,6 +2,6 @@
 {
     public interface IDbSeedService
     {
-        void SeedDb();
+        Task SeedDb();
     }
 }

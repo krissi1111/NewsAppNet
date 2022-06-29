@@ -1,14 +1,15 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using NewsAppNet.Models.DataModels;
 
 namespace NewsAppNet.Data
 {
-    public class NewsAppDbContext : DbContext
+    public class NewsAppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>, int>
     {
         public DbSet<NewsItem> NewsItems { get; set; }
-        public DbSet<User> Users { get; set; }
+        //public DbSet<User> Users { get; set; }
         public DbSet<Comment> Comments { get; set; }
-        public DbSet<Reply> Replies { get; set; }
         public DbSet<Favorite> Favorites { get; set; }
         public DbSet<NewsFeedModel> NewsFeeds { get; set; }
 
@@ -16,11 +17,13 @@ namespace NewsAppNet.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
+
             ModelBuilderNewsFeeds(modelBuilder);
             ModelBuilderNewsItem(modelBuilder);
-            ModelBuilderUser(modelBuilder);
+            //ModelBuilderUser(modelBuilder);
             ModelBuilderComment(modelBuilder);
-            ModelBuilderReply(modelBuilder);
+            //ModelBuilderReply(modelBuilder);
             ModelBuilderFavorite(modelBuilder);
         }
 
@@ -36,30 +39,36 @@ namespace NewsAppNet.Data
             });
         }
 
-        static void ModelBuilderUser(ModelBuilder modelBuilder)
+        /*static void ModelBuilderUser(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
             {
                 entity.ToTable("Users");
             });
         }
-
+        */
         static void ModelBuilderComment(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Comment>(entity =>
             {
                 entity.ToTable("Comments");
 
-                entity.HasOne(t => t.User)
+                entity.HasOne<Comment>()
+                    .WithMany(t => t.Replies)
+                    .HasForeignKey(t => t.ParentId);
+
+                /*entity.HasOne(t => t.User)
                     .WithMany(t => t.Comments)
                     .HasForeignKey(t => t.UserId);
 
                 entity.HasOne(t => t.NewsItem)
                     .WithMany(t => t.Comments)
                     .HasForeignKey(t => t.NewsItemId);
+                */
             });
+                
         }
-
+        /*
         static void ModelBuilderReply(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Reply>(entity =>
@@ -82,6 +91,7 @@ namespace NewsAppNet.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
         }
+        */
 
         static void ModelBuilderFavorite(ModelBuilder modelBuilder)
         {

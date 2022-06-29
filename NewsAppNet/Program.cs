@@ -7,6 +7,9 @@ using NewsAppNet.Services;
 using NewsAppNet.Services.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using NewsAppNet.Models.DataModels;
+using Microsoft.AspNetCore.Identity;
+using NewsAppNet.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +32,34 @@ else
     builder.Services.AddDbContext<NewsAppDbContext>(x => x.UseSqlite(connectionString));
 }
 
+builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>(options =>
+{
+    options.Password.RequireNonAlphanumeric = false;
+})
+    .AddEntityFrameworkStores<NewsAppDbContext>();
+
+var jwtSection = configuration.GetSection("JwtBearerTokenSettings");
+builder.Services.Configure<JwtBearerTokenSettings>(jwtSection);
+var jwtBearerTokenSettings = jwtSection.Get<JwtBearerTokenSettings>();
+var key = Encoding.ASCII.GetBytes(jwtBearerTokenSettings.SecretKey);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = true;
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters()
+        {
+            ValidIssuer = jwtBearerTokenSettings.Issuer,
+            ValidAudience = jwtBearerTokenSettings.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+        };
+    });
+/*
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -45,11 +76,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                         )
         };
     });
+*/
+builder.Services.AddAutoMapper(typeof(Program));
 
 builder.Services.AddScoped<INewsItemRepository, NewsItemRepository>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
-builder.Services.AddScoped<IReplyRepository, ReplyRepository>();
 builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
 builder.Services.AddScoped<INewsService, NewsService>();
 builder.Services.AddScoped<IUserService, UserService>();
