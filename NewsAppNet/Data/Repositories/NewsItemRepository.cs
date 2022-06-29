@@ -1,4 +1,5 @@
-﻿using NewsAppNet.Data.Repositories.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using NewsAppNet.Data.Repositories.Interfaces;
 using NewsAppNet.Models.DataModels;
 
 namespace NewsAppNet.Data.Repositories
@@ -28,6 +29,21 @@ namespace NewsAppNet.Data.Repositories
             }
 
             return newsItems;
+        }
+
+        public async Task<IEnumerable<NewsItem>> GetNewsIncludeAll()
+        {
+            var news = GetQueryable();
+            news = news.Include(n => n.Comments).ThenInclude(c => c.User);
+            news = news.Include(n => n.NewsFeedModel);
+            news = news.Include(n => n.Favorites);
+
+            foreach (var item in news)
+            {
+                item.Comments = item.Comments.Where(c => c.TopLevelComment).ToList();
+            }
+
+            return await news.ToListAsync();
         }
     }
 }
