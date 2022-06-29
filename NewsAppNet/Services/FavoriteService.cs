@@ -1,6 +1,6 @@
-﻿using NewsAppNet.Data.Repositories.Interfaces;
+﻿using Microsoft.AspNetCore.Identity;
+using NewsAppNet.Data.Repositories.Interfaces;
 using NewsAppNet.Models.DataModels;
-using NewsAppNet.Models.ViewModels;
 using NewsAppNet.Services.Interfaces;
 
 namespace NewsAppNet.Services
@@ -9,51 +9,31 @@ namespace NewsAppNet.Services
     {
         readonly IFavoriteRepository favoriteRepository;
         readonly INewsItemRepository newsItemRepository;
-        readonly IUserService userService;
+        readonly UserManager<ApplicationUser> userManager;
+        //readonly IUserService userService;
 
         public FavoriteService(
             IFavoriteRepository favoriteRepository,
             INewsItemRepository newsItemRepository,
-            IUserService userService
+            UserManager<ApplicationUser> userManager
+            //IUserService userService
             )
         {
             this.favoriteRepository = favoriteRepository;
             this.newsItemRepository = newsItemRepository;
-            this.userService = userService;
+            this.userManager = userManager;
+            //this.userService = userService;
         }
 
-        public async Task<ServiceResponse<List<FavoriteView>>> GetUserFavorites(int userId)
-        {
-            ServiceResponse<List<FavoriteView>> response = new();
-
-            var user = userService.GetUser(userId);
-            if(user == null)
-            {
-                response.Success = false;
-                response.Message = "Must be logged in to perform this action";
-                return response;
-            }
-
-            var fav = await favoriteRepository.GetMany(f => f.UserId == userId);
-
-            List<FavoriteView> favViews = new();
-            foreach(var item in fav)
-            {
-                favViews.Add(new FavoriteView(item));
-            }
-
-            response.Success = true;
-            response.Data = favViews;
-            return response;
-        }
 
         // Adds or removes favorite connection between user and news item.
         // Action taken depends on previous status.
-        public ServiceResponse<string> AddRemoveFavorite(int newsId, int userId)
+        public async Task<ServiceResponse<string>> AddRemoveFavorite(int newsId, int userId)
         {
             ServiceResponse<string> response = new();
 
-            var user = userService.GetUser(userId);
+            //var user = userService.GetUser(userId);
+            var user = await userManager.FindByIdAsync(userId.ToString());
             if (user == null)
             {
                 response.Success = false;
