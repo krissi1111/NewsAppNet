@@ -1,4 +1,4 @@
-﻿namespace NewsAppNet.Models.ViewModels
+﻿namespace NewsAppNet.Models.DTOs
 {
     public class Search
     {
