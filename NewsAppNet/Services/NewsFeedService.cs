@@ -1,6 +1,9 @@
-﻿using NewsAppNet.Data.NewsFeeds.ItemBuilder;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
+using NewsAppNet.Data.NewsFeeds.ItemBuilder;
 using NewsAppNet.Data.Repositories.Interfaces;
 using NewsAppNet.Models.DataModels;
+using NewsAppNet.Models.DTOs;
 using NewsAppNet.Models.ViewModels;
 using NewsAppNet.Services.Interfaces;
 using System.ServiceModel.Syndication;
@@ -11,15 +14,21 @@ namespace NewsAppNet.Services
     public class NewsFeedService : INewsFeedService
     {
         readonly INewsFeedRepository newsFeedRepository;
-        readonly IUserService userService;
+        readonly UserManager<ApplicationUser> userManager;
+        //readonly IUserService userService;
+        readonly IMapper mapper;
 
         public NewsFeedService(
             INewsFeedRepository newsFeedRepository,
-            IUserService userService
+            UserManager<ApplicationUser> userManager,
+            //IUserService userService,
+            IMapper mapper
             )
         {
             this.newsFeedRepository = newsFeedRepository;
-            this.userService = userService;
+            this.userManager = userManager;
+            //this.userService = userService;
+            this.mapper = mapper;
         }
 
         // Checks if RSS feed url is already in use
@@ -33,7 +42,7 @@ namespace NewsAppNet.Services
             return newsFeedRepository.NewsFeedExists(id);
         }
 
-        public async Task<ServiceResponse<List<NewsFeedView>>> GetFeeds(IEnumerable<int>? ids)
+        public async Task<ServiceResponse<List<NewsFeedDTO>>> GetFeeds(IEnumerable<int>? ids)
         {
             // If news feed id array not supplied or is empty, returns all feeds
             if (ids == null || !ids.Any())
@@ -44,27 +53,22 @@ namespace NewsAppNet.Services
         }
 
         // Gets all news feeds
-        public async Task<ServiceResponse<List<NewsFeedView>>> GetAll()
+        public async Task<ServiceResponse<List<NewsFeedDTO>>> GetAll()
         {
-            ServiceResponse<List<NewsFeedView>> response = new();
+            ServiceResponse<List<NewsFeedDTO>> response = new();
 
             IEnumerable<NewsFeedModel> feeds = await newsFeedRepository.GetAll();
+            var newsFeeds = mapper.Map<List<NewsFeedDTO>>(feeds);
 
-            List<NewsFeedView> newsFeedViews = new();
-            foreach (NewsFeedModel feed in feeds)
-            {
-                newsFeedViews.Add(new NewsFeedView(feed));
-            }
-
-            response.Data = newsFeedViews;
+            response.Data = newsFeeds;
             response.Success = true;
             return response;
         }
 
         // Get specific news feeds based on their id
-        public async Task<ServiceResponse<List<NewsFeedView>>> GetMany(IEnumerable<int> ids)
+        public async Task<ServiceResponse<List<NewsFeedDTO>>> GetMany(IEnumerable<int> ids)
         {
-            ServiceResponse<List<NewsFeedView>> response = new();
+            ServiceResponse<List<NewsFeedDTO>> response = new();
 
             foreach (int id in ids)
             {
@@ -77,21 +81,16 @@ namespace NewsAppNet.Services
             }
 
             IEnumerable<NewsFeedModel> feeds = await newsFeedRepository.GetMany(ids);
+            var newsFeeds = mapper.Map<List<NewsFeedDTO>>(feeds);
 
-            List<NewsFeedView> newsFeedViews = new();
-            foreach (NewsFeedModel feed in feeds)
-            {
-                newsFeedViews.Add(new NewsFeedView(feed));
-            }
-
-            response.Data = newsFeedViews;
+            response.Data = newsFeeds;
             response.Success = true;
             return response;
         }
 
-        public async Task<ServiceResponse<NewsFeedView>> GetSingle(int id)
+        public async Task<ServiceResponse<NewsFeedDTO>> GetSingle(int id)
         {
-            ServiceResponse<NewsFeedView> response = new();
+            ServiceResponse<NewsFeedDTO> response = new();
 
             if (!NewsFeedExists(id))
             {
@@ -100,10 +99,10 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            NewsFeedModel newsFeed = await newsFeedRepository.GetSingle(id);
-            NewsFeedView newsFeedView = new(newsFeed);
+            NewsFeedModel feed = await newsFeedRepository.GetSingle(id);
+            NewsFeedDTO newsFeed = mapper.Map<NewsFeedDTO>(feed);
 
-            response.Data = newsFeedView;
+            response.Data = newsFeed;
             response.Success = true;
 
             return response;
@@ -112,24 +111,25 @@ namespace NewsAppNet.Services
         // Adds new news feed to database.
         // News feeds added this way will always
         // use the default news item builder.
-        public async Task<ServiceResponse<NewsFeedView>> AddFeed(int userId, string feedName, string feedUrl, string imageDefault)
+        public async Task<ServiceResponse<NewsFeedDTO>> AddFeed(int userId, string feedName, string feedUrl, string imageDefault)
         {
-            ServiceResponse<NewsFeedView> response = new();
+            ServiceResponse<NewsFeedDTO> response = new();
 
             // Check if user has credentials for this action
-            var currentUser = await userService.GetUser(userId);
+            //var currentUser = await userService.GetUser(userId);
+            var currentUser = await userManager.FindByIdAsync(userId.ToString());
             if (currentUser == null)
             {
                 response.Success = false;
                 response.Message = "This action is only for admins";
                 return response;
             }
-            else if (currentUser.UserType != "Admin")
+            /*else if (currentUser.UserType != "Admin")
             {
                 response.Success = false;
                 response.Message = "This action is only for admins";
                 return response;
-            }
+            }*/
 
             // Check if feed url already in use
             if (NewsFeedExists(feedUrl))
@@ -166,29 +166,30 @@ namespace NewsAppNet.Services
             newsFeedRepository.Commit();
 
             response.Success = true;
-            response.Data = new NewsFeedView(feed);
+            response.Data = mapper.Map<NewsFeedDTO>(feed);
 
             return response;
         }
 
-        public async Task<ServiceResponse<NewsFeedView>> DeleteFeed(int feedId, int userId)
+        public async Task<ServiceResponse<NewsFeedDTO>> DeleteFeed(int feedId, int userId)
         {
-            ServiceResponse<NewsFeedView> response = new();
+            ServiceResponse<NewsFeedDTO> response = new();
 
-            var currentUser = await userService.GetUser(userId);
+            //var currentUser = await userService.GetUser(userId);
+            var currentUser = await userManager.FindByIdAsync(userId.ToString());
             if (currentUser == null)
             {
                 response.Success = false;
                 response.Message = "This action is only for admins";
                 return response;
             }
-            else if (currentUser.UserType != "Admin")
+            /*else if (currentUser.UserType != "Admin")
             {
                 response.Success = false;
                 response.Message = "This action is only for admins";
                 return response;
             }
-
+            */
             var feed = await newsFeedRepository.GetSingle(feedId);
             if (feed == null)
             {
@@ -196,13 +197,13 @@ namespace NewsAppNet.Services
                 response.Message = "News feed not found";
                 return response;
             }
-            var newsFeedView = new NewsFeedView(feed);
+            var newsFeed = mapper.Map<NewsFeedDTO>(feed);
 
             newsFeedRepository.Delete(feed);
             newsFeedRepository.Commit();
 
             response.Success = true;
-            response.Data = newsFeedView;
+            response.Data = newsFeed;
 
             return response;
         }
