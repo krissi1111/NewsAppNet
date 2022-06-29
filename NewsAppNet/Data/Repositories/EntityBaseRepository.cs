@@ -26,7 +26,11 @@ namespace NewsAppNet.Data.Repositories
         {
             return await _context.Set<T>().ToListAsync();
         }
-        public async virtual Task<IEnumerable<T>> GetAllInclude(params Expression<Func<T, IEntityBase>>[] include)
+        public virtual IQueryable<T> GetQueryable()
+        {
+            return _context.Set<T>().AsQueryable();
+        }
+        public async virtual Task<IEnumerable<T>> GetAllInclude(params Expression<Func<T, Object>>[] include)
         {
             var set = _context.Set<T>().AsQueryable();
             foreach (var item in include)
@@ -35,7 +39,7 @@ namespace NewsAppNet.Data.Repositories
             }
             return await set.ToListAsync();
         }
-        public async virtual Task<IEnumerable<T>> GetAllInclude(params Expression<Func<T, IEnumerable<IEntityBase>>>[] include)
+        /*public async virtual Task<IEnumerable<T>> GetAllInclude(params Expression<Func<T, IEnumerable<IEntityBase>>>[] include)
         {
             var set = _context.Set<T>().AsQueryable();
             foreach (var item in include)
@@ -43,7 +47,7 @@ namespace NewsAppNet.Data.Repositories
                 set = set.Include(item);
             }
             return await set.ToListAsync();
-        }
+        }*/
         public async virtual Task<IEnumerable<T>> GetMany(Expression<Func<T, bool>> query)
         {
             return await _context.Set<T>().Where(query).ToListAsync();
@@ -52,7 +56,7 @@ namespace NewsAppNet.Data.Repositories
         {
             return await _context.Set<T>().Where(t => ids.Contains(t.Id)).ToListAsync();
         }
-        public async virtual Task<IEnumerable<T>> GetManyInclude(Expression<Func<T, bool>> query, params Expression<Func<T, IEntityBase>>[] include)
+        public async virtual Task<IEnumerable<T>> GetManyInclude(Expression<Func<T, bool>> query, params Expression<Func<T, Object>>[] include)
         {
             var set = _context.Set<T>().AsQueryable();
             foreach (var item in include)
@@ -61,7 +65,7 @@ namespace NewsAppNet.Data.Repositories
             }
             return await set.Where(query).ToListAsync();
         }
-        public async virtual Task<IEnumerable<T>> GetManyIncluded(Expression<Func<T, bool>> query, params Expression<Func<T, IEnumerable<IEntityBase>>>[] include)
+        /*public async virtual Task<IEnumerable<T>> GetManyIncluded(Expression<Func<T, bool>> query, params Expression<Func<T, IEnumerable<IEntityBase>>>[] include)
         {
             var set = _context.Set<T>().AsQueryable();
             foreach (var item in include)
@@ -69,7 +73,7 @@ namespace NewsAppNet.Data.Repositories
                 set = set.Include(item);
             }
             return await set.Where(query).ToListAsync();
-        }
+        }*/
         public async virtual Task<T> GetSingle(int id)
         {
             return await _context.Set<T>().FirstOrDefaultAsync(entity => entity.Id == id);
@@ -99,16 +103,8 @@ namespace NewsAppNet.Data.Repositories
         // otherwise sets IsDeleted variable to true
         public virtual void Delete(T entity, bool hardDelete = false)
         {
-            if (!hardDelete)
-            {
-                entity.IsDeleted = true;
-                Update(entity);
-            }
-            else
-            {
-                EntityEntry dbEntityEntry = _context.Entry(entity);
-                dbEntityEntry.State = EntityState.Deleted;
-            }
+            EntityEntry dbEntityEntry = _context.Entry(entity);
+            dbEntityEntry.State = EntityState.Deleted;
         }
         public virtual void Commit()
         {
