@@ -1,6 +1,5 @@
 ﻿using NewsAppNet.Models.DataModels;
 using NewsAppNet.Models.DTOs;
-using NewsAppNet.Models.ViewModels;
 
 namespace NewsAppNet.Services.Interfaces
 {
