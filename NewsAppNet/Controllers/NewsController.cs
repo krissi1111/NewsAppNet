@@ -13,13 +13,13 @@ namespace NewsAppNet.Controllers
     {
         readonly INewsService newsService;
         readonly INewsFeedService newsFeedService;
-        readonly ICommentService commentReplyService;
+        readonly ICommentReplyService commentReplyService;
         readonly IFavoriteService favoriteService;
 
         public NewsController(
             INewsService newsService,
             INewsFeedService newsFeedService,
-            ICommentService commentReplyService,
+            ICommentReplyService commentReplyService,
             IFavoriteService favoriteService
             ) 
         { 
