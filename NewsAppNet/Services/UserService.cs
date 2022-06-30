@@ -35,7 +35,11 @@ namespace NewsAppNet.Services
 
             var userList = mapper.Map<List<UserDTO>>(users);
 
-            return new ServiceResponse<List<UserDTO>> { Success = true, Data = userList };
+            return new ServiceResponse<List<UserDTO>> 
+            {
+                Success = true, 
+                Data = userList 
+            };
         }
 
         public async Task<ServiceResponse<UserDTO>> GetUser(string userName)
@@ -44,12 +48,20 @@ namespace NewsAppNet.Services
 
             if (user == null)
             {
-                return new ServiceResponse<UserDTO> { Success = false, Message = "User not found" };
+                return new ServiceResponse<UserDTO> 
+                { 
+                    Success = false, 
+                    Message = "User not found" 
+                };
             }
 
             var userDTO = mapper.Map<UserDTO>(user);
 
-            return new ServiceResponse<UserDTO> { Success = true, Data = userDTO };
+            return new ServiceResponse<UserDTO> 
+            { 
+                Success = true, 
+                Data = userDTO 
+            };
         }
 
         public async Task<ServiceResponse<UserAuth>> Login(UserLogin userLogin)
@@ -58,7 +70,11 @@ namespace NewsAppNet.Services
             
             if (user == null)
             {
-                return new ServiceResponse<UserAuth> { Success = false, Message = "User not found" };
+                return new ServiceResponse<UserAuth> 
+                { 
+                    Success = false, 
+                    Message = "User not found" 
+                };
             }
 
             var token = GenerateToken(user);
@@ -70,7 +86,11 @@ namespace NewsAppNet.Services
                 Token = token
             };
 
-            return new ServiceResponse<UserAuth> { Success = true, Data = userAuth };
+            return new ServiceResponse<UserAuth> 
+            { 
+                Success = true, 
+                Data = userAuth 
+            };
         }
 
         public async Task<ServiceResponse<UserAuth>> LoginToken(string userName)
@@ -79,7 +99,11 @@ namespace NewsAppNet.Services
 
             if (user == null)
             {
-                return new ServiceResponse<UserAuth> { Success = false, Message = "Token login not successful" };
+                return new ServiceResponse<UserAuth> 
+                { 
+                    Success = false, 
+                    Message = "Token login not successful" 
+                };
             }
 
             var token = GenerateToken(user);
