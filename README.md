@@ -2,7 +2,7 @@
 
 
 This is the backend of my newsapp project. <br />
-It is meant to be run in conjunction with the frontend [here](https://github.com/krissi1111/newsapp-redux)
+It is meant to be run in conjunction with the frontend [here](https://github.com/krissi1111/newsappretype)
 
 The project is set up to run using Docker and can be run using the docker-compose.yml file seen below.
 
