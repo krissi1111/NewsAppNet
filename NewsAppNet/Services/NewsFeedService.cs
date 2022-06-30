@@ -4,6 +4,7 @@ using NewsAppNet.Data.NewsFeeds.ItemBuilder;
 using NewsAppNet.Data.Repositories.Interfaces;
 using NewsAppNet.Models.DataModels;
 using NewsAppNet.Models.DTOs;
+using NewsAppNet.Models.ViewModels;
 using NewsAppNet.Services.Interfaces;
 using System.ServiceModel.Syndication;
 using System.Xml;
