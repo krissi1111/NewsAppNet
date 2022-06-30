@@ -4,9 +4,18 @@
 This is the backend of my newsapp project. <br />
 It is meant to be run in conjunction with the frontend [here](https://github.com/krissi1111/newsappretype)
 
-The project is set up to run using Docker and can be run using the docker-compose.yml file seen below.
+To run the backend you can clone the repository and open with Visual Studio and you should be able to just run it.
 
-The backend is set up to run using a database that is only supplied through docker using the MSSQL image so running the backend independently doesn't really work.
+On first run an Sqlite local database will be created in project directory and seeded with some data.
+
+An admin user will be created and after running the frontend you can log in as admin with username: admin and password: Superadmin1
+Alternatively you can register a new user.
+
+The project is set up to run using Docker but the docker images are not up to date at the moment so ignore instructions below
+
+### `Ignore below`
+
+The project is set up to run using Docker and can be run using the docker-compose.yml file seen below.
 
 To run the project save the docker-compose.yml file on your computer and then call 
 
