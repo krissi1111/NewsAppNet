@@ -26,7 +26,6 @@ namespace NewsAppNet.Models.DTOs
     {
         [Required]
         public int NewsId { get; set; }
-        public int? UserId { get; set; }
         public string Text { get; set; } = string.Empty;
         public bool TopLevelComment { get; set; } = true;
     }
@@ -35,10 +34,21 @@ namespace NewsAppNet.Models.DTOs
     {
         [Required]
         public int NewsId { get; set; }
-        public int? UserId { get; set; }
         [Required]
         public int ParentId { get; set; }
         public string Text { get; set; } = string.Empty;
         public bool TopLevelComment { get; set; } = false;
+    }
+
+    public class CommentEditDTO
+    {
+        [Required]
+        public int Id { get; set; }
+        public string Text { get; set; } = string.Empty;
+    }
+
+    public class CommentDeleteDTO
+    {
+        public int Id { get; set; }
     }
 }
