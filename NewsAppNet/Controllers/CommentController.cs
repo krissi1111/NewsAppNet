@@ -13,15 +13,15 @@ namespace NewsAppNet.Controllers
     [Route("[controller]")]
     public class CommentController : ControllerBase
     {
-        readonly ICommentReplyService commentReplyService;
+        readonly ICommentService commentService;
         readonly UserManager<ApplicationUser> userManager;
 
         public CommentController(
-            ICommentReplyService commentReplyService,
+            ICommentService commentService,
             UserManager<ApplicationUser> userManager
             )
         {
-            this.commentReplyService = commentReplyService;
+            this.commentService = commentService;
             this.userManager = userManager;
         }
 
@@ -36,7 +36,7 @@ namespace NewsAppNet.Controllers
             }
             return userId;
         }
-
+        /*
         private ActionResult HandleResponse(IResponse serviceResponse)
         {
             if (!serviceResponse.Success)
@@ -48,16 +48,15 @@ namespace NewsAppNet.Controllers
                 return Ok(serviceResponse);
             }
         }
-
+        */
         // Adds a new comment
         [Authorize]
         [HttpPost("addComment")]
         public async Task<IActionResult> AddComment([FromBody] CommentAddDTO comment)
         {
             int userId = GetUserId();
-            comment.UserId = comment.UserId | userId;
 
-            var response = await commentReplyService.AddComment(comment.NewsId, userId, comment.Text);
+            var response = await commentService.AddComment(comment.NewsId, userId, comment.Text);
             
             if (!response.Success)
             {
@@ -89,9 +88,8 @@ namespace NewsAppNet.Controllers
         public async Task<IActionResult> AddReply([FromBody] ReplyAddDTO reply)
         {
             int userId = GetUserId();
-            reply.UserId = reply.UserId | userId;
 
-            var response = await commentReplyService.AddReply(reply.NewsId, userId, reply.ParentId, reply.Text);
+            var response = await commentService.AddReply(reply.NewsId, userId, reply.ParentId, reply.Text);
 
             if (!response.Success)
             {
@@ -106,11 +104,11 @@ namespace NewsAppNet.Controllers
         // Only original comment author or admin allowed.
         [Authorize]
         [HttpPatch("editComment")]
-        public async Task<IActionResult> EditComment([FromForm] int commentId, [FromForm] string commentText)
+        public async Task<IActionResult> EditComment([FromBody] CommentEditDTO comment)
         {
             int userId = GetUserId();
             
-            var response = await commentReplyService.EditComment(commentId, userId, commentText);
+            var response = await commentService.EditComment(comment.Id, userId, comment.Text);
 
             if (!response.Success)
             {
@@ -119,34 +117,16 @@ namespace NewsAppNet.Controllers
 
             return Ok(response.Data);
         }
-        /*
-        // Changes text of existing reply.
-        // Only original reply author or admin allowed.
-        [Authorize]
-        [HttpPatch("editReply")]
-        public async Task<IActionResult> EditReply([FromForm] int replyId, [FromForm] string replyText)
-        {
-            int userId = GetUserId();
 
-            var response = await commentReplyService.EditReply(replyId, userId, replyText);
-            
-            if (!response.Success)
-            {
-                return new BadRequestObjectResult(response.Message);
-            }
-
-            return Ok(response.Data);
-        }
-        */
         // Deletes existing comment.
         // Only original comment author or admin allowed.
         [Authorize]
         [HttpPost("deleteComment")]
-        public async Task<IActionResult> DeleteComment([FromForm] int commentId)
+        public async Task<IActionResult> DeleteComment([FromBody] CommentDeleteDTO comment)
         {
             int userId = GetUserId();
             
-            var response = await commentReplyService.DeleteComment(commentId, userId);
+            var response = await commentService.DeleteComment(comment.Id, userId);
 
             if (!response.Success)
             {
@@ -155,56 +135,5 @@ namespace NewsAppNet.Controllers
 
             return Ok(response.Data);
         }
-        /*
-        // Deletes existing reply.
-        // Only original reply author or admin allowed.
-        [Authorize]
-        [HttpPost("deleteReply")]
-        public async Task<IActionResult> DeleteReply([FromForm] int replyId)
-        {
-            int userId = GetUserId();
-            
-            var response = await commentReplyService.DeleteReply(replyId, userId);
-
-            if (!response.Success)
-            {
-                return new BadRequestObjectResult(response.Message);
-            }
-
-            return Ok(response.Data);
-        }
-        */
-        [Authorize]
-        [HttpPost("restoreComment")]
-        public async Task<IActionResult> RestoreComment([FromForm] int commentId)
-        {
-            int userId = GetUserId();
-            
-            var response = await commentReplyService.RestoreComment(commentId, userId);
-            
-            if (!response.Success)
-            {
-                return new BadRequestObjectResult(response.Message);
-            }
-
-            return Ok(response.Data);
-        }
-        /*
-        [Authorize]
-        [HttpPost("restoreReply")]
-        public async Task<IActionResult> RestoreReply([FromForm] int replyId)
-        {
-            int userId = GetUserId();
-            
-            var response = await commentReplyService.RestoreReply(replyId, userId);
-
-            if (!response.Success)
-            {
-                return new BadRequestObjectResult(response.Message);
-            }
-
-            return Ok(response.Data);
-        }
-        */
     }
 }
