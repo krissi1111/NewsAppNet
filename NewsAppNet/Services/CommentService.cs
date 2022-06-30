@@ -7,12 +7,12 @@ using NewsAppNet.Services.Interfaces;
 
 namespace NewsAppNet.Services
 {
-    public class CommentReplyService : ICommentReplyService
+    public class CommentService : ICommentService
     {
         readonly ICommentRepository commentRepository;
         readonly UserManager<ApplicationUser> userManager;
         readonly IMapper mapper;
-        public CommentReplyService(
+        public CommentService(
             ICommentRepository commentRepository, 
             UserManager<ApplicationUser> userManager,
             IMapper mapper
@@ -122,6 +122,21 @@ namespace NewsAppNet.Services
         {
             ServiceResponse<CommentDTO> response = new();
 
+            var user = await userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+            {
+                response.Success = false;
+                response.Message = "Must be logged in to perform this action";
+                return response;
+            }
+
+            if (string.IsNullOrEmpty(commentText))
+            {
+                response.Success = false;
+                response.Message = "Comment text is empty";
+                return response;
+            }
+
             Comment comment = new()
             {
                 NewsItemId = newsId,
@@ -154,7 +169,6 @@ namespace NewsAppNet.Services
                 return response;
             }
 
-            //var user = await userService.GetUser(userId);
             var user = await userManager.FindByIdAsync(userId.ToString());
             if (user == null)
             {
@@ -162,9 +176,12 @@ namespace NewsAppNet.Services
                 response.Message = "Must be logged in to perform this action";
                 return response;
             }
-            // Users can only edit their own comments
-            // Admin can edit any comment
-            else if(!(user.Id == comment.UserId/* || user.UserType == "Admin"*/))
+
+            var isAdmin = 
+                await userManager.IsInRoleAsync(user, "admin") |
+                await userManager.IsInRoleAsync(user, "superadmin");
+
+            if (!(isAdmin | user.Id == comment.UserId)) 
             {
                 response.Success = false;
                 response.Message = "User is not authorized to perform this action";
@@ -189,6 +206,7 @@ namespace NewsAppNet.Services
 
             return response;
         }
+
         /*
         // Used for editing already existing replies.
         // Users can only edit their own replies.
@@ -263,9 +281,14 @@ namespace NewsAppNet.Services
                 response.Message = "Must be logged in to perform this action";
                 return response;
             }
+
+            var isAdmin =
+                await userManager.IsInRoleAsync(user, "admin") |
+                await userManager.IsInRoleAsync(user, "superadmin");
+
             // Users can only delete their own comments
             // Admin can delete any comment
-            else if (!(user.Id == comment.UserId /*|| user.UserType == "Admin"*/))
+            if (!(user.Id == comment.UserId | isAdmin))
             {
                 response.Success = false;
                 response.Message = "User is not authorized to perform this action";
@@ -283,131 +306,5 @@ namespace NewsAppNet.Services
 
             return response;
         }
-        /*
-        // Used for deleting replies.
-        // Users can only delete their own replies.
-        // Admin can delete any reply.
-        public async Task<ServiceResponse<CommentDTO>> DeleteReply(int replyId, int userId)
-        {
-            ServiceResponse<CommentDTO> response = new();
-
-            var reply = await replyRepository.GetSingle(replyId);
-            if (reply == null)
-            {
-                response.Success = false;
-                response.Message = string.Format("Reply {0} not found", replyId);
-                return response;
-            }
-
-            var user = await userService.GetUser(userId);
-            if (user == null)
-            {
-                response.Success = false;
-                response.Message = "Must be logged in to perform this action";
-                return response;
-            }
-            // Users can only delete their own replies
-            // Admin can delete any reply
-            else if (!(user.Id == reply.UserId || user.UserType == "Admin"))
-            {
-                response.Success = false;
-                response.Message = "User is not authorized to perform this action";
-                return response;
-            }
-
-            response.Data = mapper.Map<CommentDTO>(reply);
-
-            replyRepository.Delete(reply);
-            replyRepository.Commit();
-
-            response.Success = true;
-
-            return response;
-        }
-        */
-        // Used for restoring soft deleted comments
-        public async Task<ServiceResponse<CommentDTO>> RestoreComment(int commentId, int userId)
-        {
-            ServiceResponse<CommentDTO> response = new();
-
-            var comment = await commentRepository.GetSingle(commentId);
-            if (comment == null)
-            {
-                response.Success = false;
-                response.Message = string.Format("Comment {0} not found", commentId);
-                return response;
-            }
-
-            //var currentUser = await userService.GetUser(userId);
-            var currentUser = await userManager.FindByIdAsync(userId.ToString());
-            if (currentUser == null)
-            {
-                response.Success = false;
-                response.Message = "This action is only for admins";
-                return response;
-            }
-            /*else if (currentUser.UserType != "Admin")
-            {
-                response.Success = false;
-                response.Message = "This action is only for admins";
-                return response;
-            }*/
-
-            commentRepository.Update(comment);
-            commentRepository.Commit();
-
-            var commentDTO = mapper.Map<CommentDTO>(comment);
-
-            response.Success = true;
-            response.Data = commentDTO;
-
-            return response;
-        }
-        /*
-        // Used for restoring soft deleted replies
-        public async Task<ServiceResponse<CommentDTO>> RestoreReply(int replyId, int userId)
-        {
-            ServiceResponse<CommentDTO> response = new();
-
-            var reply = await replyRepository.GetSingle(replyId);
-            if (reply == null)
-            {
-                response.Success = false;
-                response.Message = string.Format("Comment {0} not found", replyId);
-                return response;
-            }
-            else if (!reply.IsDeleted)
-            {
-                response.Success = false;
-                response.Message = string.Format("Comment {0} is not soft deleted", replyId);
-                return response;
-            }
-
-            var currentUser = await userService.GetUser(userId);
-            if (currentUser == null)
-            {
-                response.Success = false;
-                response.Message = "This action is only for admins";
-                return response;
-            }
-            else if (currentUser.UserType != "Admin")
-            {
-                response.Success = false;
-                response.Message = "This action is only for admins";
-                return response;
-            }
-
-            reply.IsDeleted = false;
-            replyRepository.Update(reply);
-            replyRepository.Commit();
-
-            var replyView = mapper.Map<CommentDTO>(reply);
-
-            response.Success = true;
-            response.Data = replyView;
-
-            return response;
-        }
-        */
     }
 }

@@ -84,7 +84,7 @@ builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
 builder.Services.AddScoped<INewsService, NewsService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<ICommentReplyService, CommentReplyService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IFavoriteService, FavoriteService>();
 builder.Services.AddScoped<INewsFeedService, NewsFeedService>();
 builder.Services.AddScoped<INewsFeedRepository, NewsFeedRepository>();
